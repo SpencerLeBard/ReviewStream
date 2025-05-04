@@ -1,0 +1,31 @@
+{
+  "name": "txtify",
+  "version": "1.0.0",
+  "description": "A full-stack application for collecting and displaying customer reviews via text messaging",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "nodemon server/server.js",
+    "client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install-all": "npm install && npm install --prefix server && npm install --prefix client"
+  },
+  "keywords": [
+    "react",
+    "express",
+    "reviews",
+    "sms",
+    "text-messaging"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.1",
+    "nodemon": "^3.0.1"
+  },
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "dotenv": "^16.5.0",
+    "twilio": "^5.5.2"
+  }
+}
