@@ -1,0 +1,70 @@
+.home-container {
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.hero {
+  margin-bottom: 4rem;
+}
+
+.heading {
+  font-size: 3.5rem;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+}
+
+.subheading {
+  font-size: 1.3rem;
+  color: #7f8c8d;
+  max-width: 700px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+.cta-button {
+  display: inline-block;
+  background-color: #3498db;
+  color: white;
+  padding: 0.8rem 2rem;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-top: 1rem;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+}
+
+.cta-button:hover {
+  background-color: #2980b9;
+}
+
+.features-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 4rem;
+}
+
+.feature-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #3498db;
+}
+
+.feature-title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.feature-description {
+  color: #7f8c8d;
+  line-height: 1.6;
+} 

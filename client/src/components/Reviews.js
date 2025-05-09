@@ -1,108 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import axios from 'axios';
-
-const ReviewsContainer = styled.div`
-  padding: 2rem 0;
-`;
-
-const ReviewsHeader = styled.div`
-  text-align: center;
-  margin-bottom: 3rem;
-`;
-
-const ReviewsTitle = styled.h1`
-  font-size: 2.5rem;
-  color: #2c3e50;
-  margin-bottom: 1rem;
-`;
-
-const ReviewsSubtitle = styled.p`
-  font-size: 1.2rem;
-  color: #7f8c8d;
-  max-width: 700px;
-  margin: 0 auto;
-  line-height: 1.6;
-`;
-
-const ReviewsList = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
-`;
-
-const ReviewCard = styled.div`
-  background-color: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-  }
-`;
-
-const ReviewHeader = styled.div`
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-`;
-
-const ReviewerInitial = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #3498db;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  margin-right: 1rem;
-`;
-
-const ReviewerName = styled.h3`
-  font-size: 1.1rem;
-  color: #2c3e50;
-  margin: 0;
-`;
-
-const ReviewDate = styled.span`
-  font-size: 0.8rem;
-  color: #95a5a6;
-  margin-top: 0.2rem;
-  display: block;
-`;
-
-const ReviewContent = styled.p`
-  color: #7f8c8d;
-  line-height: 1.6;
-  margin-bottom: 1rem;
-`;
-
-const ReviewRating = styled.div`
-  color: #f39c12;
-  font-size: 1.2rem;
-`;
-
-const LoadingMessage = styled.div`
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
-  color: #7f8c8d;
-`;
-
-const ErrorMessage = styled.div`
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
-  color: #e74c3c;
-  background-color: #fadbd8;
-  border-radius: 8px;
-  margin: 2rem 0;
-`;
+import './Reviews.css';
 
 const Reviews = () => {
   const [reviews, setReviews] = useState([]);
@@ -195,38 +92,38 @@ const Reviews = () => {
   };
 
   if (loading) {
-    return <LoadingMessage>Loading reviews...</LoadingMessage>;
+    return <div className="loading-message">Loading reviews...</div>;
   }
 
   if (error) {
-    return <ErrorMessage>{error}</ErrorMessage>;
+    return <div className="error-message">{error}</div>;
   }
 
   return (
-    <ReviewsContainer>
-      <ReviewsHeader>
-        <ReviewsTitle>Customer Reviews</ReviewsTitle>
-        <ReviewsSubtitle>
+    <div className="reviews-container">
+      <div className="reviews-header">
+        <h1 className="reviews-title">Customer Reviews</h1>
+        <p className="reviews-subtitle">
           See what our customers have to say about their experience with us.
-        </ReviewsSubtitle>
-      </ReviewsHeader>
+        </p>
+      </div>
 
-      <ReviewsList>
+      <div className="reviews-list">
         {reviews.map((review) => (
-          <ReviewCard key={review.id}>
-            <ReviewHeader>
-              <ReviewerInitial>{getInitial(review.customerName)}</ReviewerInitial>
+          <div className="review-card" key={review.id}>
+            <div className="review-header">
+              <div className="reviewer-initial">{getInitial(review.customerName)}</div>
               <div>
-                <ReviewerName>{review.customerName}</ReviewerName>
-                <ReviewDate>{formatDate(review.date)}</ReviewDate>
+                <h3 className="reviewer-name">{review.customerName}</h3>
+                <span className="review-date">{formatDate(review.date)}</span>
               </div>
-            </ReviewHeader>
-            <ReviewContent>{review.reviewText}</ReviewContent>
-            <ReviewRating>{renderStars(review.rating)}</ReviewRating>
-          </ReviewCard>
+            </div>
+            <p className="review-content">{review.reviewText}</p>
+            <div className="review-rating">{renderStars(review.rating)}</div>
+          </div>
         ))}
-      </ReviewsList>
-    </ReviewsContainer>
+      </div>
+    </div>
   );
 };
 
