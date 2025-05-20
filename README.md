@@ -9,4 +9,4 @@ A full-stack application for collecting and displaying customer reviews via text
 
 - **Frontend:** React
 - **Backend:** Node.js, Express
-- **Planned:** MongoDB, Twilio for SMS 
+- **Planned:** Supabase, Twilio for SMS 
