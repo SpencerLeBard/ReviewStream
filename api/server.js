@@ -1,22 +1,15 @@
-require('dotenv').config();
+require('dotenv').config();          
 const express = require('express');
 const cors    = require('cors');
 const morgan  = require('morgan');
-const path    = require('path');
 const twilio  = require('twilio');
+// const supabase = require('./supabaseClient');  // Uncomment once you set up supabaseClient.js
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-// parse URL‑encoded bodies for Twilio webhooks:
-app.use(
-  express.urlencoded({
-    extended: false,  // Twilio sends URL‑encoded payloads
-  })
-);
-
+app.use(express.urlencoded({ extended: false }));  // to parse Twilio’s form‑encoded webhooks
 app.use(morgan('dev'));
 
 const client = twilio(
@@ -24,41 +17,61 @@ const client = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
-async function sendSms() {
-  try {
-    const msg = await client.messages.create({
-      body: 'Hello World',  
-      from: process.env.TWILIO_PHONE,
-      to:   '+12082302474'
-    });
-    console.log('Message Sent:', msg.sid);
-  } catch (err) {
-    console.error('Twilio error:', err);
-  }
-}
+// TODO: Call helper from here
+// async function sendSms(to, body) {
+//   try {
+//     const msg = await client.messages.create({
+//       body,
+//       from: process.env.TWILIO_PHONE,
+//       to,
+//     });
+//     console.log(`✅ SMS sent to ${to}. SID: ${msg.sid}`);
+//     return msg.sid;
+//   } catch (err) {
+//     console.error(`❌ Twilio error sending to ${to}:`, err);
+//     throw err;
+//   }
+// }
 
-// ─── YOUR EXISTING ROUTES ──────────────────────────────────────────────────────
 const reviewRoutes = require('./routes/reviewRoutes');
 app.use('/api/reviews', reviewRoutes);
 
-// ─── INBOUND SMS WEBHOOK ───────────────────────────────────────────────────────
-app.post('/api/text-webhook', (req, res) => {
-  
-  // Twilio posts these fields in req.body:
+//INBOUND SMS WEBHOOK
+app.post('/api/text-webhook', async (req, res) => {
   const { From, To, Body } = req.body;
-
   console.log('📩 Inbound SMS received:');
   console.log('   From:', From);
   console.log('   To:  ', To);
   console.log('   Body:', Body);
 
-  // Here you could enqueue a job to save the review, etc.
+  // Optional: parse a numeric rating from “X stars” in the body
+  // let rating = null;
+  // const match = Body.match(/\b([1-5])\s*stars?\b/i);
+  // if (match) rating = parseInt(match[1], 10);
 
-  // Respond with empty TwiML to acknowledge receipt
-  res.type('text/xml').send('<Response></Response>');
+  //Supabase insert
+  /*
+  try {
+    const { error } = await supabase
+      .from('reviews')
+      .insert({
+        phone_from: From,
+        phone_to:   To,
+        body:       Body,
+        rating,     // remove or keep if you uncomment rating parse above
+      });
+    if (error) throw error;
+    console.log('💾 Review saved to Supabase');
+  } catch (err) {
+    console.error('⚠️ Supabase insert failed:', err.message);
+  }
+  */
+
+  // Respond to Twilio with empty TwiML to acknowledge receipt
+  res.type('text/xml').send('<Response><Message>Thanks for your feedback!</Message></Response>');
 });
 
 
-// ─── START SERVER ───────────────────────────────────────────────────────────────
+//START SERVER
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
