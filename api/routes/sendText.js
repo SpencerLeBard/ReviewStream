@@ -9,7 +9,7 @@ const client = twilio(
 async function sendTestSms() {
   try {
     const msg = await client.messages.create({
-      body: 'Hello World',  
+      body: 'Thanks for visiting [Business], to review your experience please reply directly to this text with your feedback and number of stars out of 5.' ,
       from: process.env.TWILIO_PHONE,  // 4) Your Twilio local number
       to:   '+12082302474'             // 5) Your verified personal cell
     });
