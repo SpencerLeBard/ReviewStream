@@ -1,77 +1,83 @@
-require('dotenv').config();          
+require('dotenv').config();
+
 const express = require('express');
 const cors    = require('cors');
 const morgan  = require('morgan');
 const twilio  = require('twilio');
-// const supabase = require('./supabaseClient');  // Uncomment once you set up supabaseClient.js
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY     
+);
+
+
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));  // to parse Twilio’s form‑encoded webhooks
+app.use(express.urlencoded({ extended: false })); 
 app.use(morgan('dev'));
 
-const client = twilio(
+const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
 
-// TODO: Call helper from here
-// async function sendSms(to, body) {
-//   try {
-//     const msg = await client.messages.create({
-//       body,
-//       from: process.env.TWILIO_PHONE,
-//       to,
-//     });
-//     console.log(`✅ SMS sent to ${to}. SID: ${msg.sid}`);
-//     return msg.sid;
-//   } catch (err) {
-//     console.error(`❌ Twilio error sending to ${to}:`, err);
-//     throw err;
-//   }
-// }
 
-const reviewRoutes = require('./routes/reviewRoutes');
-app.use('/api/reviews', reviewRoutes);
+// const reviewRoutes = require('./routes/reviewRoutes');
+// app.use('/api/reviews', reviewRoutes);
 
-//INBOUND SMS WEBHOOK
+/* ──────────────────────────────────────────────────────────── */
+/*  POST /api/text-webhook  – Twilio inbound SMS               */
+/* ──────────────────────────────────────────────────────────── */
 app.post('/api/text-webhook', async (req, res) => {
-  const { From, To, Body } = req.body;
-  console.log('📩 Inbound SMS received:');
-  console.log('   From:', From);
-  console.log('   To:  ', To);
-  console.log('   Body:', Body);
+  const { From, To, Body = '' } = req.body || {};
 
-  // Optional: parse a numeric rating from “X stars” in the body
-  // let rating = null;
-  // const match = Body.match(/\b([1-5])\s*stars?\b/i);
-  // if (match) rating = parseInt(match[1], 10);
+  console.log('Inbound SMS:', { From, To, Body });
 
-  //Supabase insert
-  /*
+  /* 1. Parse optional "X stars" rating (1–5) */
+  let rating = null;
+  const match = Body.match(/\b([1-5])\s*stars?\b/i);
+  if (match) rating = parseInt(match[1], 10);
+
+  /* 2. Skip insert if Body empty AND no rating */
+  const bodyTrimmed = Body.trim();
+  if (!bodyTrimmed && rating === null) {
+    console.log('🛈 Skipping insert: empty body & no rating');
+    return res
+      .type('text/xml')
+      .send('<Response><Message>Thanks!</Message></Response>');
+  }
+
+  /* 3. Insert into Supabase */
   try {
     const { error } = await supabase
       .from('reviews')
-      .insert({
+      .insert([{
         phone_from: From,
         phone_to:   To,
-        body:       Body,
-        rating,     // remove or keep if you uncomment rating parse above
-      });
-    if (error) throw error;
-    console.log('💾 Review saved to Supabase');
-  } catch (err) {
-    console.error('⚠️ Supabase insert failed:', err.message);
-  }
-  */
+        body:       bodyTrimmed || null,
+        rating:     rating              
+      }]);
 
-  // Respond to Twilio with empty TwiML to acknowledge receipt
-  res.type('text/xml').send('<Response><Message>Thanks for your feedback!</Message></Response>');
+    if (error) throw error;
+    console.log('Review saved to Supabase');
+  } catch (err) {
+    console.error('Supabase insert failed:', err.message);
+  }
+
+  /* 4. Respond to Twilio */
+  res
+    .type('text/xml')
+    .send('<Response><Message>Thanks for your feedback!</Message></Response>');
 });
 
 
-//START SERVER
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5001;
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+module.exports = app;
