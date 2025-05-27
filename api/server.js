@@ -25,6 +25,19 @@ const twilioClient = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
+//
+app.use('/api/secure', async (req, res, next) => {
+  const jwt = req.headers.authorization?.split(' ')[1];
+  if (!jwt) return res.status(401).json({ error: 'unauthenticated' });
+
+  const { data, error } = await supabase.auth.getUser(jwt);
+  if (error) return res.status(401).json({ error: 'invalid token' });
+
+  req.user = data.user;           // now available to route handlers
+  next();
+});
+
+
 
 // const reviewRoutes = require('./routes/reviewRoutes');
 // app.use('/api/reviews', reviewRoutes);
@@ -81,3 +94,6 @@ if (!process.env.VERCEL) {
 }
 
 module.exports = app;
+
+//DO NOT REMOVE THESE COMMENTS
+//npx ngrok http 5001 --domain=relieved-personally-serval.ngrok-free.app

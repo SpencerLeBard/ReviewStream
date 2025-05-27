@@ -11,7 +11,8 @@ async function sendTestSms() {
     const msg = await client.messages.create({
       body: 'Thanks for visiting [Business], to review your experience please reply directly to this text with your feedback and number of stars out of 5.' ,
       from: process.env.TWILIO_PHONE,  
-      to:   '+12082302474'            
+      to:   '+12082302474'
+      //12086317925       
     });
     console.log('Message SID:', msg.sid);
   } catch (err) {

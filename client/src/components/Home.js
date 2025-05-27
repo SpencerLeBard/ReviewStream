@@ -6,7 +6,7 @@ const Home = () => {
   return (
     <div className="home-container">
       <div className="hero">
-        <h1 className="heading">Welcome to Txtify</h1>
+        <h1 className="heading">Welcome to ReviewStreams</h1>
         <p className="subheading">
           The simplest way to collect customer reviews via text message and showcase them on your website.
         </p>
