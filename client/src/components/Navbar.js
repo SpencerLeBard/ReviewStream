@@ -1,94 +1,9 @@
 import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import styled from 'styled-components';
 import { useUser } from '@supabase/auth-helpers-react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
-
-const NavContainer = styled.nav`
-  background: #fff;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const LogoLink = styled(Link)`
-  display: flex;
-  align-items: center;
-`;
-
-const LogoImage = styled.img`
-  height: 40px;
-  width: auto;
-`;
-
-const LeftNavLinks = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-`;
-
-const RightNavLinks = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-`;
-
-const NavLinks = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-
-  @media (max-width: 768px) {
-    display: ${({ $open }) => ($open ? 'flex' : 'none')};
-    position: absolute;
-    flex-direction: column;
-    top: 70px;
-    left: 0;
-    right: 0;
-    background: #fff;
-    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
-    padding: 1.5rem;
-    z-index: 10;
-  }
-`;
-
-const NavItem = styled(NavLink)`
-  color: #7f8c8d;
-  font-weight: 600;
-  transition: color 0.3s;
-  &.active,
-  &:hover {
-    color: #3498db;
-  }
-`;
-
-const MenuButton = styled.button`
-  display: none;
-  font-size: 1.5rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  @media (max-width: 768px) {
-    display: block;
-  }
-`;
-
-const LoginButton = styled(Link)`
-  background: #3498db;
-  color: #fff;
-  padding: 0.5rem 1.2rem;
-  border-radius: 4px;
-  font-weight: 600;
-  text-decoration: none;
-  margin-left: 2rem;
-  transition: background 0.2s;
-  &:hover {
-    background: #217dbb;
-  }
-`;
+import './Navbar.css';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -101,26 +16,30 @@ export default function Navbar() {
   };
 
   return (
-    <NavContainer>
-      <LogoLink to="/">
-        <LogoImage src="/Textify.png" alt="Txtify Logo" />
-      </LogoLink>
-      <MenuButton onClick={() => setOpen(!open)}>{open ? '✕' : '☰'}</MenuButton>
-      <LeftNavLinks>
-        <NavItem to="/" end>Home</NavItem>
-        <NavItem to="/reviews">Reviews</NavItem>
-        <NavItem to="/about">About</NavItem>
-      </LeftNavLinks>
-      <RightNavLinks>
-        {user && <NavItem to="/dashboard">Dashboard</NavItem>}
-        {user && <NavItem to="/console">Console</NavItem>}
-        {user && <NavItem to="/settings">Settings</NavItem>}
+    <nav className="nav-container">
+      <Link to="/" className="logo-link">
+        ReviewStream
+      </Link>
+      <button className="menu-button" onClick={() => setOpen(!open)}>
+        {open ? '✕' : '☰'}
+      </button>
+      <div className="left-nav-links">
+        {!user && <NavLink to="/" end className="nav-item">Home</NavLink>}
+        {!user && <NavLink to="/reviews" className="nav-item">Reviews</NavLink>}
+        {!user && <NavLink to="/about" className="nav-item">About</NavLink>}
+        {user && <NavLink to="/dashboard" className="nav-item">Dashboard</NavLink>}
+        {user && <NavLink to="/console" className="nav-item">Console</NavLink>}
+        {user && <NavLink to="/settings" className="nav-item">Settings</NavLink>}
+      </div>
+      <div className="right-nav-links">
         {user ? (
-          <LoginButton as="button" onClick={handleLogout} style={{cursor: 'pointer'}}>Logout</LoginButton>
+          <button className="login-button login-button-as-button" onClick={handleLogout}>
+            Logout
+          </button>
         ) : (
-          <LoginButton to="/login">Login</LoginButton>
+          <Link to="/login" className="login-button">Login</Link>
         )}
-      </RightNavLinks>
-    </NavContainer>
+      </div>
+    </nav>
   );
 }

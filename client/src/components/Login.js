@@ -9,7 +9,7 @@ export default function Login() {
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session?.user) navigate('/profile', { replace: true });
+      if (session?.user) navigate('/console', { replace: true });
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
