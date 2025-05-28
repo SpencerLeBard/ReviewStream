@@ -39,8 +39,8 @@ app.use('/api/secure', async (req, res, next) => {
 
 
 
-// const reviewRoutes = require('./routes/reviewRoutes');
-// app.use('/api/reviews', reviewRoutes);
+const reviewRoutes = require('./routes/reviewRoutes');
+app.use('/api/reviews', reviewRoutes);
 
 /* ──────────────────────────────────────────────────────────── */
 /*  POST /api/text-webhook  – Twilio inbound SMS               */

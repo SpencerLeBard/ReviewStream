@@ -1,86 +1,76 @@
 const express = require('express');
 const router = express.Router();
+const { createClient } = require('@supabase/supabase-js');
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 // GET all reviews
-router.get('/', (req, res) => {
-  // TODO: Connect to database and fetch all reviews
-  // Example: const reviews = await Review.find();
-  
-  // Mock reviews data
-  const reviews = [
-    { 
-      id: '1', 
-      customerName: 'John Doe', 
-      phoneNumber: '+15551234567',
-      rating: 5, 
-      reviewText: 'Fantastic service! Would definitely recommend to others.',
-      date: new Date('2023-07-15')
-    },
-    { 
-      id: '2', 
-      customerName: 'Jane Smith', 
-      phoneNumber: '+15557654321',
-      rating: 4, 
-      reviewText: 'Great experience overall. Just a minor issue with delivery time.',
-      date: new Date('2023-07-20')
-    },
-    { 
-      id: '3', 
-      customerName: 'Michael Brown', 
-      phoneNumber: '+15551112222',
-      rating: 5, 
-      reviewText: 'Absolutely loved the product and the customer service was excellent!',
-      date: new Date('2023-08-05')
-    }
-  ];
-  
-  res.json(reviews);
+router.get('/', async (req, res) => {
+  try {
+    // Fetch all reviews from Supabase
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    res.status(500).json({ message: 'Failed to fetch reviews', error: error.message });
+  }
 });
 
 // POST new review (this would be called when receiving a text)
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { customerName, phoneNumber, rating, reviewText } = req.body;
     
-    // TODO: Save review to database
-    // Example: const newReview = await Review.create({ customerName, phoneNumber, rating, reviewText });
+    // Insert new review into Supabase
+    const { data, error } = await supabase
+      .from('reviews')
+      .insert([{ 
+        phone_from: phoneNumber,
+        body: reviewText,
+        rating: rating
+      }])
+      .select();
     
-    // Mock new review
-    const newReview = {
-      id: Date.now().toString(),
-      customerName,
-      phoneNumber,
-      rating,
-      reviewText,
-      date: new Date()
-    };
+    if (error) throw error;
     
-    res.status(201).json(newReview);
+    res.status(201).json(data[0]);
   } catch (error) {
+    console.error('Error creating review:', error);
     res.status(400).json({ message: error.message });
   }
 });
 
 // GET review by ID
-router.get('/:id', (req, res) => {
-  // TODO: Connect to database and fetch review by ID
-  // Example: const review = await Review.findById(req.params.id);
-  
-  // Mock finding a review
-  const review = {
-    id: req.params.id,
-    customerName: 'John Doe',
-    phoneNumber: '+15551234567',
-    rating: 5,
-    reviewText: 'Great service!',
-    date: new Date('2023-08-01')
-  };
-  
-  if (!review) {
-    return res.status(404).json({ message: 'Review not found' });
+router.get('/:id', async (req, res) => {
+  try {
+    // Fetch review by ID from Supabase
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+    
+    if (error) throw error;
+    
+    if (!data) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching review:', error);
+    res.status(500).json({ message: 'Failed to fetch review', error: error.message });
   }
-  
-  res.json(review);
 });
 
 module.exports = router; 
