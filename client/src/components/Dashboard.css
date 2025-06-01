@@ -1,0 +1,43 @@
+.dashboard-stats {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 3rem;
+  justify-content: center;
+}
+
+.stat-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  min-width: 150px;
+  text-align: center;
+  flex: 1;
+  max-width: 300px;
+}
+
+.stat-card h3 {
+  font-size: 1rem;
+  color: #7f8c8d;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #3498db;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .dashboard-stats {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .stat-card {
+    width: 100%;
+    max-width: 100%;
+  }
+} 

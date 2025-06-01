@@ -26,6 +26,27 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET reviews by company ID
+router.get('/company/:companyId', async (req, res) => {
+  try {
+    const companyId = req.params.companyId;
+    
+    // Fetch reviews for a specific company from Supabase
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching company reviews:', error);
+    res.status(500).json({ message: 'Failed to fetch company reviews', error: error.message });
+  }
+});
+
 // POST new review (this would be called when receiving a text)
 router.post('/', async (req, res) => {
   try {
