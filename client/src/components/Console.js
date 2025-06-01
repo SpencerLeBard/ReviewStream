@@ -3,12 +3,15 @@ import './Console.css';
 
 const Console = () => {
   const [contacts, setContacts] = useState([
-    { id: 1, phone: '+15551234567', name: 'John Doe', dateClosed: '2023-07-15', autoSend: true },
-    { id: 2, phone: '+15559876543', name: 'Jane Smith', dateClosed: '2023-08-20', autoSend: false },
-    { id: 3, phone: '+15552223333', name: 'Bob Johnson', dateClosed: '2023-09-10', autoSend: true },
+    { id: 1, phone: '+15551234567', name: 'John Doe', dateClosed: '2023-07-15', status: 'Sent', autoSend: true },
+    { id: 2, phone: '+15559876543', name: 'Jane Smith', dateClosed: '2023-08-20', status: 'Unresponded', autoSend: false },
+    { id: 3, phone: '+15552223333', name: 'Bob Johnson', dateClosed: '2023-09-10', status: 'New Number', autoSend: true },
   ]);
 
   const [editingCell, setEditingCell] = useState({ rowId: null, field: null });
+  
+  // Status options for dropdown
+  const statusOptions = ['New Number', 'Sent', 'Unresponded'];
 
   // Function to handle cell editing
   const handleCellEdit = (id, field, value) => {
@@ -37,6 +40,7 @@ const Console = () => {
       phone: '',
       name: '',
       dateClosed: new Date().toISOString().split('T')[0],
+      status: 'New Number',
       autoSend: false
     };
     setContacts([...contacts, newContact]);
@@ -54,6 +58,7 @@ const Console = () => {
           <div className="header-cell">Name</div>
           <div className="header-cell">Date Closed</div>
           <div className="header-cell">Auto Send</div>
+          <div className="header-cell">Status</div>
           <div className="header-cell">Actions</div>
         </div>
         
@@ -126,6 +131,30 @@ const Console = () => {
                   />
                   <span className="toggle-slider"></span>
                 </label>
+              </div>
+              
+              <div className="table-cell">
+                {editingCell.rowId === contact.id && editingCell.field === 'status' ? (
+                  <select
+                    value={contact.status}
+                    onChange={(e) => handleCellEdit(contact.id, 'status', e.target.value)}
+                    onBlur={() => setEditingCell({ rowId: null, field: null })}
+                    autoFocus
+                  >
+                    {statusOptions.map(option => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div 
+                    className="editable-cell"
+                    onClick={() => setEditingCell({ rowId: contact.id, field: 'status' })}
+                  >
+                    {contact.status || 'Click to edit'}
+                  </div>
+                )}
               </div>
               
               <div className="table-cell action-cell">

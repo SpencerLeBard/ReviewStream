@@ -15,9 +15,15 @@ import './Dashboard.css';
 
 const Dashboard = () => {
   const [reviews, setReviews] = useState([]);
+  const [filteredReviews, setFilteredReviews] = useState([]);
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeStarFilter, setActiveStarFilter] = useState(null);
+  const [dateRange, setDateRange] = useState({
+    startDate: '',
+    endDate: ''
+  });
   const session = useSession();
 
   useEffect(() => {
@@ -39,6 +45,7 @@ const Dashboard = () => {
         if (!revRes.ok) throw new Error(`Failed to fetch reviews: ${revRes.status}`);
         const revData = await revRes.json();
         setReviews(revData);
+        setFilteredReviews(revData);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -49,13 +56,60 @@ const Dashboard = () => {
     fetchData();
   }, [session]);
 
+  // Apply filters whenever filter states change
+  useEffect(() => {
+    if (reviews.length === 0) return;
+
+    let result = [...reviews];
+
+    // Apply star filter if active
+    if (activeStarFilter !== null) {
+      result = result.filter(review => review.rating === activeStarFilter);
+    }
+
+    // Apply date range filter if dates are set
+    if (dateRange.startDate) {
+      const startDate = new Date(dateRange.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      result = result.filter(review => new Date(review.created_at) >= startDate);
+    }
+
+    if (dateRange.endDate) {
+      const endDate = new Date(dateRange.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      result = result.filter(review => new Date(review.created_at) <= endDate);
+    }
+
+    setFilteredReviews(result);
+  }, [reviews, activeStarFilter, dateRange]);
+
   const chartData = useMemo(() => {
     const base = Array.from({ length: 5 }, (_, i) => ({ rating: i + 1, count: 0 }));
-    reviews.forEach(({ rating }) => {
+    filteredReviews.forEach(({ rating }) => {
       if (rating >= 1 && rating <= 5) base[rating - 1].count += 1;
     });
     return base;
-  }, [reviews]);
+  }, [filteredReviews]);
+
+  const handleStarFilter = (stars) => {
+    if (activeStarFilter === stars) {
+      // If clicking the active filter, clear it
+      setActiveStarFilter(null);
+    } else {
+      // Set the new filter
+      setActiveStarFilter(stars);
+    }
+  };
+
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    setDateRange(prev => ({ ...prev, [name]: value }));
+  };
+
+  const clearFilters = () => {
+    setActiveStarFilter(null);
+    setDateRange({ startDate: '', endDate: '' });
+  };
 
   const renderStars = (rating) =>
     rating
@@ -90,18 +144,64 @@ const Dashboard = () => {
       <div className="dashboard-stats">
         <div className="stat-card">
           <h3>Total Reviews</h3>
-          <p className="stat-number">{reviews.length}</p>
+          <p className="stat-number">{filteredReviews.length}</p>
         </div>
         <div className="stat-card">
           <h3>Average Rating</h3>
           <p className="stat-number">
-            {reviews.length
+            {filteredReviews.length
               ? (
-                  reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
+                  filteredReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / filteredReviews.length
                 ).toFixed(1)
               : 'N/A'}
           </p>
         </div>
+      </div>
+
+      {/* Filters */}
+      <div className="filters-container">
+        <div className="filter-section">
+          <h3>Filter by Rating</h3>
+          <div className="star-filters">
+            {[1, 2, 3, 4, 5].map(stars => (
+              <button
+                key={stars}
+                className={`star-filter-btn ${activeStarFilter === stars ? 'active' : ''}`}
+                onClick={() => handleStarFilter(stars)}
+              >
+                {stars} ★
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="filter-section">
+          <h3>Filter by Date</h3>
+          <div className="date-filters">
+            <div className="date-filter">
+              <label>From:</label>
+              <input
+                type="date"
+                name="startDate"
+                value={dateRange.startDate}
+                onChange={handleDateChange}
+              />
+            </div>
+            <div className="date-filter">
+              <label>To:</label>
+              <input
+                type="date"
+                name="endDate"
+                value={dateRange.endDate}
+                onChange={handleDateChange}
+              />
+            </div>
+          </div>
+        </div>
+        
+        <button className="clear-filters-btn" onClick={clearFilters}>
+          Clear Filters
+        </button>
       </div>
 
       {/* Bar chart */}
@@ -122,12 +222,12 @@ const Dashboard = () => {
 
       {/* Reviews list */}
       <div className="reviews-list">
-        {reviews.length === 0 ? (
+        {filteredReviews.length === 0 ? (
           <div className="no-reviews-message">
-            No reviews available yet for your company.
+            No reviews match your current filters.
           </div>
         ) : (
-          reviews.map((review) => (
+          filteredReviews.map((review) => (
             <div className="review-card" key={review.id}>
               <div className="review-header">
                 <div className="reviewer-initial">{getInitial(review.phone_from)}</div>
