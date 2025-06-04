@@ -43,7 +43,7 @@ app.use('/api/secure', async (req, res, next) => {
 app.post('/api/send-review', async (req, res) => {
   const { customerPhone } = req.body;
 
-  //'Spencer's Company' for testing
+  //'Spencer's Company' mock data
   const company_id = 3;
 
   // fetch company name just for the message body
