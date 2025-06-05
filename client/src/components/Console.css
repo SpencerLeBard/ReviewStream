@@ -202,4 +202,15 @@ input:checked + .toggle-slider:before {
 
 .add-row-button:hover {
   background-color: #219653;
+}
+
+.table-row-disabled {
+  background-color: #f0f0f0;
+}
+
+.disabled-cell {
+  color: #a0a0a0;
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+  pointer-events: none;
 } 
