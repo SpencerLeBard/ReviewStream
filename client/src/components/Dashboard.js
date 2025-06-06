@@ -158,6 +158,22 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Bar chart */}
+      <div className="chart-wrapper">
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="rating" tickFormatter={(n) => `${n}★`} />
+            <YAxis allowDecimals={false} />
+            <Tooltip
+              formatter={(v) => [`${v}`, 'Reviews']}
+              labelFormatter={(l) => `${l} stars`}
+            />
+            <Bar dataKey="count" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
       {/* Filters */}
       <div className="filters-container">
         <div className="filter-section">
@@ -202,22 +218,6 @@ const Dashboard = () => {
         <button className="clear-filters-btn" onClick={clearFilters}>
           Clear Filters
         </button>
-      </div>
-
-      {/* Bar chart */}
-      <div className="chart-wrapper">
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="rating" tickFormatter={(n) => `${n}★`} />
-            <YAxis allowDecimals={false} />
-            <Tooltip
-              formatter={(v) => [`${v}`, 'Reviews']}
-              labelFormatter={(l) => `${l} stars`}
-            />
-            <Bar dataKey="count" />
-          </BarChart>
-        </ResponsiveContainer>
       </div>
 
       {/* Reviews list */}
