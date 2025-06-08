@@ -3,13 +3,11 @@ const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 const twilio = require('twilio');
 
-// Initialize Supabase client
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
 );
 
-// Initialize Twilio client
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
@@ -96,16 +94,23 @@ router.post('/:id/send-review', async (req, res) => {
     
     const text = `Thanks for visiting ${company.name}. Reply with 1-5 stars and feedback.`;
     
+    let formattedPhone = customerPhone.trim();
+    if (/^\+[2-9]\d{9}$/.test(formattedPhone)) {
+      formattedPhone = `+1${formattedPhone.substring(1)}`;
+    } else if (/^\d{10}$/.test(formattedPhone)) {
+      formattedPhone = `+1${formattedPhone}`;
+    }
+
     const msg = await twilioClient.messages.create({
       body: text,
       from: process.env.TWILIO_PHONE,
-      to: customerPhone
+      to: formattedPhone
     });
     
     // Insert review request into database
     const { error } = await supabase.from('review_requests').insert([{
       company_id: companyId,
-      customer_phone: customerPhone,
+      customer_phone: formattedPhone,
       message_sid: msg.sid
     }]);
     
@@ -114,7 +119,7 @@ router.post('/:id/send-review', async (req, res) => {
     res.json({ sid: msg.sid });
   } catch (error) {
     console.error('Error sending review request:', error);
-    res.status(500).json({ error: 'Failed to send review request' });
+    res.status(500).json({ error: `Failed to send review request: ${error.message}` });
   }
 });
 

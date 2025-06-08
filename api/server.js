@@ -2,75 +2,96 @@
 npx ngrok http 5001 --domain=relieved-personally-serval.ngrok-free.app
 
 curl -X POST http://localhost:5001/api/send-review \
-  -H "Content-Type: application/json" \
-  -d '{"customerPhone":"+12082302474"}'
+     -H "Content-Type: application/json" \
+     -d '{"customerPhone":"+12082302474"}'
 */
 
-
 require('dotenv').config();
-const express = require('express');
-const cors    = require('cors');
-const morgan  = require('morgan');
-const twilio  = require('twilio');
+const express  = require('express');
+const cors     = require('cors');
+const morgan   = require('morgan');
+const twilio   = require('twilio');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
+
 const supabase = createClient(
-  process.env.SUPABASE_URL, 
+  process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
 );
+
 const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID, 
+  process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
+
+/* Spencer's Company for POC */
+const COMPANY_ID = 3;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan('dev'));
 
-/* ─ secure routes ─ */
-app.use('/api/secure', async (req, res, next) => {
-  const jwt = req.headers.authorization?.split(' ')[1];
-  if (!jwt) return res.status(401).json({ error: 'unauthenticated' });
-  const { data, error } = await supabase.auth.getUser(jwt);
-  if (error) return res.status(401).json({ error: 'invalid token' });
-  req.user = data.user;
-  next();
-});
+const reviewRoutes = require('./routes/reviewRoutes');
+app.use('/api/reviews', reviewRoutes);
 
-/* ─ send review request ─ */
-app.post('/api/send-review', async (req, res) => {
-  const { customerPhone } = req.body;
+const companyRoutes = require('./routes/companyRoutes');
+app.use('/api/companies', companyRoutes);
 
-  //'Spencer's Company' mock data
-  const company_id = 3;
-
-  // fetch company name just for the message body
-  const { data: comp } = await supabase
+/* ──────────────────────────── COMPANY INFO  ──────────────────────────── */
+/* Dashboard expects this exact path: /api/secure/users/company            */
+app.get('/api/secure/users/company', async (_req, res) => {
+  const { data, error } = await supabase
     .from('companies')
-    .select('name')
-    .eq('id', company_id)
+    .select('*')
+    .eq('id', COMPANY_ID)
     .single();
-
-  const text = `Thanks for visiting ${comp.name}. Reply with 1-5 stars and feedback.`;
-
-  const msg = await twilioClient.messages.create({
-    body: text,
-    from: process.env.TWILIO_PHONE,
-    to:   customerPhone
-  });
-
-  await supabase.from('review_requests').insert([{
-    company_id,
-    customer_phone: customerPhone,
-    message_sid:    msg.sid
-  }]);
-
-  res.json({ sid: msg.sid });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
 
-/* ─ inbound SMS ─ */
+/* ──────────────────────────── CONTACTS CRUD ──────────────────────────── */
+app.get('/api/contacts', async (_req, res) => {
+  const { data, error } = await supabase
+    .from('contacts')
+    .select('*')
+    .eq('company_id', COMPANY_ID)
+    .order('created_at');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.post('/api/contacts', async (req, res) => {
+  const { data, error } = await supabase
+    .from('contacts')
+    .insert([{ ...req.body, company_id: COMPANY_ID }])
+    .select('*')
+    .single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.patch('/api/contacts/:id', async (req, res) => {
+  const { id } = req.params;
+  const { data, error } = await supabase
+    .from('contacts')
+    .update({ ...req.body, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.delete('/api/contacts/:id', async (req, res) => {
+  const { id } = req.params;
+  const { error } = await supabase.from('contacts').delete().eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
+/* ──────────────────────────── INBOUND SMS WEBHOOK ──────────────────────────── */
 app.post('/api/text-webhook', async (req, res) => {
   const { From, Body = '', SmsSid } = req.body || {};
 
@@ -83,36 +104,33 @@ app.post('/api/text-webhook', async (req, res) => {
     .limit(1)
     .single();
 
-  if (!reqRow) return res.status(400).json({ error: 'no open review request' });
+  if (!reqRow)
+    return res.status(400).json({ error: 'no open review request' });
 
   const ratingMatch = Body.match(/\b([1-5])\s*stars?\b/i);
   const rating      = ratingMatch ? parseInt(ratingMatch[1], 10) : null;
   const bodyText    = Body.trim();
   if (!bodyText && rating === null)
-    return res.type('text/xml').send('<Response><Message>Thanks!</Message></Response>');
+    return res
+      .type('text/xml')
+      .send('<Response><Message>Thanks!</Message></Response>');
 
-  const { error } = await supabase.from('reviews').insert([{
+  await supabase.from('reviews').insert([{
     company_id: reqRow.company_id,
     phone_from: From,
     body:       bodyText,
     rating
   }]);
-  if (error) console.error('review insert:', error.message);
 
   await supabase
     .from('review_requests')
     .update({ responded: true, response_sid: SmsSid, rating, body: bodyText })
     .eq('id', reqRow.id);
 
-  res.type('text/xml').send('<Response><Message>Thanks for your feedback!</Message></Response>');
+  res
+    .type('text/xml')
+    .send('<Response><Message>Thanks for your feedback!</Message></Response>');
 });
-
-/* ─ routes ─ */
-const reviewRoutes = require('./routes/reviewRoutes');
-app.use('/api/reviews', reviewRoutes);
-
-const userRoutes = require('./routes/userRoutes');
-app.use('/api/secure/users', userRoutes);
 
 if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 5001;
