@@ -37,15 +37,16 @@ const Console = () => {
     const newId = contacts.length > 0 ? Math.max(...contacts.map(c => c.id)) + 1 : 1;
     const newContact = {
       id: newId,
-      phone: '',
+      phone: '+2082302474',
       name: '',
       dateClosed: new Date().toISOString().split('T')[0],
       status: 'New Number',
-      autoSend: false
+      autoSend: false,
+      phoneLocked: true
     };
     setContacts([...contacts, newContact]);
-    // Set the new row's phone field to be in edit mode
-    setEditingCell({ rowId: newId, field: 'phone' });
+    // Set the new row's name field to be in edit mode
+    setEditingCell({ rowId: newId, field: 'name' });
   };
 
   // Hardcoded send button
@@ -83,7 +84,7 @@ const Console = () => {
             return (
               <div key={contact.id} className={`table-row${isFirstRow ? ' table-row-disabled' : ''}`}>
                 <div className="table-cell">
-                  {isFirstRow ? (
+                  {isFirstRow || contact.phoneLocked ? (
                     <div className="editable-cell disabled-cell">{contact.phone}</div>
                   ) : (
                     editingCell.rowId === contact.id && editingCell.field === 'phone' ? (
