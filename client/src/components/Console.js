@@ -5,6 +5,15 @@ import { useSession } from '@supabase/auth-helpers-react';
 
 const statusOptions = ['New Number', 'Sent', 'Unresponded'];
 
+const formatDate = (d) => {
+  if (!d) return 'N/A';
+  return new Date(d).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
 export default function Console() {
   const [rows, setRows]    = useState([]);
   const [editing, setEdit] = useState({ id: null, field: null });
@@ -44,12 +53,15 @@ export default function Console() {
   }, [session]);
 
   const patch = async (id, obj) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('contacts')
       .update({ ...obj, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select('*')
       .single();
+
+    if (error) throw error;
+    
     if (data) setRows(r => r.map(row => (row.id === id ? data : row)));
   };
 
@@ -58,7 +70,6 @@ export default function Console() {
     setNewRow({
       phone: '',
       name: '',
-      date_closed: '',
       auto_send: false,
       status: 'New Number',
     });
@@ -108,10 +119,14 @@ export default function Console() {
   };
 
   const sendSms = async (id, phone) => {
+    console.log(`sendSms called with id: ${id}, phone: ${phone}`);
+
     if (!company) {
       alert('Company information could not be loaded. Please refresh and try again.');
+      console.error('Company not loaded');
       return;
     }
+    console.log('Company is loaded, proceeding to send.');
 
     try {
       const res = await fetch(`/api/companies/${company.id}/send-review`, {
@@ -125,11 +140,11 @@ export default function Console() {
         throw new Error(errData.error || 'Failed to send review request');
       }
 
-      await patch(id, { status: 'Sent' });
+      await patch(id, { status: 'Sent', last_date_sent: new Date().toISOString() });
       alert('Sent!');
 
     } catch (error) {
-      console.error('Error sending SMS:', error);
+      console.error('Error sending SMS or updating contact:', error);
       alert(`Error: ${error.message}`);
     }
   };
@@ -179,7 +194,7 @@ export default function Console() {
         <div className="table-header">
           <div className="header-cell">Phone</div>
           <div className="header-cell">Name</div>
-          <div className="header-cell">Date Closed</div>
+          <div className="header-cell">Last Date Sent</div>
           <div className="header-cell">Auto Send</div>
           <div className="header-cell">Status</div>
           <div className="header-cell">Actions</div>
@@ -189,76 +204,68 @@ export default function Console() {
           {rows.map((row, index) => {
             const isFirstRow = index === 0;
             const displayRow = { ...row, locked: isFirstRow };
-            const isNewRowValid = newRow && newRow.phone && newRow.name && newRow.date_closed;
 
             return (
-              <React.Fragment key={row.id}>
-                <div className="table-row">
-                  <div className="table-cell">{renderCell(displayRow,'phone')}</div>
-                  <div className="table-cell">{renderCell(displayRow,'name')}</div>
-                  <div className="table-cell">{renderCell(displayRow,'date_closed','date')}</div>
+              <div key={row.id} className="table-row">
+                <div className="table-cell">{renderCell(displayRow,'phone')}</div>
+                <div className="table-cell">{renderCell(displayRow,'name')}</div>
+                <div className="table-cell">{formatDate(row.last_date_sent)}</div>
 
-                  <div className="table-cell">
-                    <label className="toggle-switch">
-                      <input
-                        type="checkbox"
-                        checked={row.auto_send}
-                        disabled={isFirstRow}
-                        onChange={() => !isFirstRow && patch(row.id,{auto_send:!row.auto_send})}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="table-cell">{renderCell(displayRow,'status')}</div>
-
-                  <div className="table-cell action-cell">
-                    <button
-                      className="send-button"
-                      disabled={loadingCompany}
-                      onClick={() => sendSms(row.id, row.phone)}
-                    >Send</button>
-                    {!isFirstRow && (
-                      <button className="delete-button" onClick={() => delRow(row.id)}>✕</button>
-                    )}
-                  </div>
+                <div className="table-cell">
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={row.auto_send}
+                      disabled={isFirstRow}
+                      onChange={() => !isFirstRow && patch(row.id,{auto_send:!row.auto_send})}
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
                 </div>
 
-                {index === 0 && newRow && (
-                  <div className="table-row">
-                    <div className="table-cell">
-                      <input type="tel" name="phone" value={newRow.phone} onChange={handleNewRowChange} placeholder="+15551234567" />
-                    </div>
-                    <div className="table-cell">
-                      <input type="text" name="name" value={newRow.name} onChange={handleNewRowChange} placeholder="Name" />
-                    </div>
-                    <div className="table-cell">
-                      <input type="date" name="date_closed" value={newRow.date_closed} onChange={handleNewRowChange} />
-                    </div>
-                    <div className="table-cell">
-                      <label className="toggle-switch">
-                        <input type="checkbox" name="auto_send" checked={newRow.auto_send} onChange={handleNewRowChange} />
-                        <span className="toggle-slider"></span>
-                      </label>
-                    </div>
-                    <div className="table-cell">
-                      <select name="status" value={newRow.status} onChange={handleNewRowChange}>
-                        {statusOptions.map(o => <option key={o}>{o}</option>)}
-                      </select>
-                    </div>
-                    <div className="table-cell action-cell">
-                      {isNewRowValid && (
-                        <>
-                          <button className="send-button" onClick={handleSaveNewRow}>✓</button>
-                          <button className="delete-button" onClick={handleCancelNewRow}>✕</button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </React.Fragment>
+                <div className="table-cell">{renderCell(displayRow,'status')}</div>
+
+                <div className="table-cell action-cell">
+                  <button
+                    className="send-button"
+                    disabled={loadingCompany}
+                    onClick={() => sendSms(row.id, row.phone)}
+                  >Send</button>
+                  {!isFirstRow && (
+                    <button className="delete-button" onClick={() => delRow(row.id)}>✕</button>
+                  )}
+                </div>
+              </div>
             );
           })}
+          {newRow && (
+            <div className="table-row">
+              <div className="table-cell">
+                <input type="tel" name="phone" value={newRow.phone} onChange={handleNewRowChange} placeholder="+15551234567" />
+              </div>
+              <div className="table-cell">
+                <input type="text" name="name" value={newRow.name} onChange={handleNewRowChange} placeholder="Name" />
+              </div>
+              <div className="table-cell">N/A</div>
+              <div className="table-cell">
+                <label className="toggle-switch">
+                  <input type="checkbox" name="auto_send" checked={newRow.auto_send} onChange={handleNewRowChange} />
+                  <span className="toggle-slider"></span>
+                </label>
+              </div>
+              <div className="table-cell">
+                <select name="status" value={newRow.status} onChange={handleNewRowChange}>
+                  {statusOptions.map(o => <option key={o}>{o}</option>)}
+                </select>
+              </div>
+              <div className="table-cell action-cell">
+                {newRow.phone && newRow.name && (
+                  <button className="send-button" onClick={handleSaveNewRow}>✓</button>
+                )}
+                <button className="delete-button" onClick={handleCancelNewRow}>✕</button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

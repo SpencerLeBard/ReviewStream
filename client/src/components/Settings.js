@@ -4,6 +4,7 @@ import './Settings.css';
 
 const Settings = () => {
   const [globalAutoSend, setGlobalAutoSend] = useState(false);
+  const [autoSendReminders, setAutoSendReminders] = useState(false);
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [useDefaultMessage, setUseDefaultMessage] = useState(true);
@@ -31,6 +32,20 @@ const Settings = () => {
                 type="checkbox"
                 checked={globalAutoSend}
                 onChange={() => setGlobalAutoSend(!globalAutoSend)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        
+        <div className="setting-row">
+          <div className="setting-label">Auto send reminders every 2 days</div>
+          <div className="setting-control">
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={autoSendReminders}
+                onChange={() => setAutoSendReminders(!autoSendReminders)}
               />
               <span className="toggle-slider"></span>
             </label>
