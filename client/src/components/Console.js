@@ -1,10 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import './Console.css';
 import { useSession } from '@supabase/auth-helpers-react';
 
+// Options for the status dropdown
 const statusOptions = ['New Number', 'Sent', 'Unresponded'];
 
+/**
+ * Formats a date string into a more readable format.
+ * @param {string} d - The date string to format.
+ * @returns {string} The formatted date or 'N/A'.
+ */
 const formatDate = (d) => {
   if (!d) return 'N/A';
   return new Date(d).toLocaleDateString('en-US', {
@@ -15,13 +21,18 @@ const formatDate = (d) => {
 };
 
 export default function Console() {
-  const [rows, setRows]    = useState([]);
-  const [editing, setEdit] = useState({ id: null, field: null });
-  const [company, setCompany] = useState(null);
-  const [loadingCompany, setLoadingCompany] = useState(true);
-  const [newRow, setNewRow] = useState(null);
-  const session = useSession();
+  // --- STATE MANAGEMENT ---
+  const [rows, setRows]    = useState([]); // Stores the list of contacts
+  const [editing, setEdit] = useState({ id: null, field: null }); // Tracks which cell is being edited
+  const [editValue, setEditValue] = useState(''); // Holds the temporary value of the cell being edited
+  const [company, setCompany] = useState(null); // Stores the current user's company info
+  const [loadingCompany, setLoadingCompany] = useState(true); // Loading state for company data
+  const [newRow, setNewRow] = useState(null); // Holds data for a new contact being added
+  const session = useSession(); // Supabase auth session
 
+  // --- DATA FETCHING ---
+
+  // Fetch all contacts from the database when the component mounts
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from('contacts').select('*').order('created_at');
@@ -29,6 +40,7 @@ export default function Console() {
     })();
   }, []);
 
+  // Fetch the user's company information when the session becomes available
   useEffect(() => {
     if (!session) {
       setLoadingCompany(false);
@@ -52,7 +64,14 @@ export default function Console() {
     })();
   }, [session]);
 
-  const patch = async (id, obj) => {
+  // --- CRUD OPERATIONS & EVENT HANDLERS ---
+
+  /**
+   * Updates a contact in the database and reflects the change in the local state.
+   * @param {string} id - The ID of the contact to update.
+   * @param {object} obj - An object containing the fields to update.
+   */
+  const patch = useCallback(async (id, obj) => {
     const { data, error } = await supabase
       .from('contacts')
       .update({ ...obj, updated_at: new Date().toISOString() })
@@ -63,9 +82,12 @@ export default function Console() {
     if (error) throw error;
     
     if (data) setRows(r => r.map(row => (row.id === id ? data : row)));
-  };
+  }, []);
 
-  const addRow = () => {
+  /**
+   * Initializes a new row in the UI for adding a new contact.
+   */
+  const addRow = useCallback(() => {
     if (newRow) return;
     setNewRow({
       phone: '',
@@ -73,40 +95,55 @@ export default function Console() {
       auto_send: false,
       status: 'New Number',
     });
-  };
+  }, [newRow]);
 
-  const handleNewRowChange = (e) => {
+  /**
+   * Handles changes to the input fields for the new row.
+   */
+  const handleNewRowChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
     setNewRow(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
-  };
+  }, []);
 
-  const handleCancelNewRow = () => {
+  /**
+   * Cancels the process of adding a new row.
+   */
+  const handleCancelNewRow = useCallback(() => {
     setNewRow(null);
-  };
+  }, []);
 
-  const handleSaveNewRow = async () => {
+  /**
+   * Saves the new contact to the database and adds it to the local state.
+   */
+  const handleSaveNewRow = useCallback(async () => {
     if (!company) {
       alert('Company information is not available. Please try again.');
       return;
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('contacts')
-      .insert([{ ...newRow, company_id: company.id }]);
+      .insert([{ ...newRow, company_id: company.id }])
+      .select()
+      .single();
 
     if (error) {
       alert(`Error saving contact: ${error.message}`);
-    } else {
+    } else if (data) {
+      // Add the new row to the state without re-fetching all data
+      setRows(r => [...r, data]);
       setNewRow(null);
-      const { data } = await supabase.from('contacts').select('*').order('created_at');
-      if (data) setRows(data);
     }
-  };
+  }, [company, newRow]);
 
-  const delRow = async id => {
+  /**
+   * Deletes a contact after user confirmation.
+   * @param {string} id - The ID of the contact to delete.
+   */
+  const delRow = useCallback(async id => {
     if (window.confirm('Are you sure you want to delete this contact?')) {
       try {
         const { error } = await supabase.from('contacts').delete().eq('id', id);
@@ -116,9 +153,14 @@ export default function Console() {
         alert(`Error deleting contact: ${error.message}`);
       }
     }
-  };
+  }, []);
 
-  const sendSms = async (id, phone) => {
+  /**
+   * Sends a review request SMS to a contact.
+   * @param {string} id - The contact's ID.
+   * @param {string} phone - The contact's phone number.
+   */
+  const sendSms = useCallback(async (id, phone) => {
     console.log(`sendSms called with id: ${id}, phone: ${phone}`);
 
     if (!company) {
@@ -147,11 +189,22 @@ export default function Console() {
       console.error('Error sending SMS or updating contact:', error);
       alert(`Error: ${error.message}`);
     }
-  };
+  }, [company, patch]);
 
+  // --- RENDER LOGIC ---
+
+  /**
+   * Renders a table cell, handling inline editing logic.
+   * @param {object} row - The data for the current row.
+   * @param {string} field - The key of the data to be displayed/edited.
+   * @param {string} [type='text'] - The input type for editing.
+   * @returns {JSX.Element} The rendered table cell.
+   */
   const renderCell = (row, field, type='text') => {
+    // Lock the first row from being edited
     if (row.locked) return <div className="editable-cell disabled-cell">{row[field]}</div>;
 
+    // If the cell is in edit mode, render an input or select dropdown
     if (editing.id === row.id && editing.field === field) {
       if (field === 'status') {
         return (
@@ -165,21 +218,38 @@ export default function Console() {
           </select>
         );
       }
+      
+      // Saves the change on blur or 'Enter', reverts on 'Escape'
+      const handleUpdate = () => {
+        if (editValue !== row[field]) {
+            patch(row.id, { [field]: editValue });
+        }
+        setEdit({ id: null, field: null });
+      };
+
       return (
         <input
           type={type}
-          value={row[field] || ''}
-          onChange={e => patch(row.id, { [field]: e.target.value })}
-          onBlur={() => setEdit({ id: null, field: null })}
+          value={editValue || ''}
+          onChange={e => setEditValue(e.target.value)}
+          onBlur={handleUpdate}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleUpdate();
+            else if (e.key === 'Escape') setEdit({ id: null, field: null });
+          }}
           autoFocus
         />
       );
     }
 
+    // Default view: display text, enter edit mode on click
     return (
       <div
         className="editable-cell"
-        onClick={() => setEdit({ id: row.id, field })}
+        onClick={() => {
+            setEdit({ id: row.id, field });
+            setEditValue(row[field] || '');
+        }}
       >
         {row[field] || 'Click to edit'}
       </div>
@@ -190,7 +260,9 @@ export default function Console() {
     <div className="console-container">
       <h1 className="console-title">Review Management Console</h1>
 
+      {/* Contacts Table */}
       <div className="console-table">
+        {/* Table Header */}
         <div className="table-header">
           <div className="header-cell">Phone</div>
           <div className="header-cell">Name</div>
@@ -200,7 +272,9 @@ export default function Console() {
           <div className="header-cell">Actions</div>
         </div>
 
+        {/* Table Body */}
         <div className="table-body">
+          {/* Render existing contact rows */}
           {rows.map((row, index) => {
             const isFirstRow = index === 0;
             const displayRow = { ...row, locked: isFirstRow };
@@ -238,6 +312,7 @@ export default function Console() {
               </div>
             );
           })}
+          {/* Render the new row form if active */}
           {newRow && (
             <div className="table-row">
               <div className="table-cell">
@@ -269,6 +344,7 @@ export default function Console() {
         </div>
       </div>
 
+      {/* Add New Row Button */}
       <div className="add-row-container">
         <button className="add-row-button" onClick={addRow}>+</button>
       </div>
