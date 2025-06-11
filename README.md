@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/85b0ea83-0f4c-42ec-8776-6d9b24f8b285)
+![image](https://github.com/user-attachments/assets/ec920fc9-3a6c-45e8-b766-fa074460651d)
 
 # Txtify
 
