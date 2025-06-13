@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import './Console.css';
+import './Home.css';
+import './About.css';
 import { useSession } from '@supabase/auth-helpers-react';
 
 // Options for the status dropdown
@@ -257,97 +259,109 @@ export default function Console() {
   };
 
   return (
-    <div className="console-container">
-      <h1 className="console-title">Review Management Console</h1>
-
-      {/* Contacts Table */}
-      <div className="console-table">
-        {/* Table Header */}
-        <div className="table-header">
-          <div className="header-cell">Phone</div>
-          <div className="header-cell">Name</div>
-          <div className="header-cell">Last Date Sent</div>
-          <div className="header-cell">Auto Send</div>
-          <div className="header-cell">Status</div>
-          <div className="header-cell">Actions</div>
+    <div className="home-container">
+      <header className="hero">
+        <div className="hero-content">
+          <h1 className="heading">Review Management Console</h1>
+          <p className="subheading">
+            Manage your customer contacts and send review requests.
+          </p>
         </div>
+      </header>
 
-        {/* Table Body */}
-        <div className="table-body">
-          {/* Render existing contact rows */}
-          {rows.map((row, index) => {
-            const isFirstRow = index === 0;
-            const displayRow = { ...row, locked: isFirstRow };
+      <section className="testimonials-section">
+        <div className="console-table">
+          {/* Table Header */}
+          <div className="table-header">
+            <div className="header-cell">Phone</div>
+            <div className="header-cell">Name</div>
+            <div className="header-cell">Last Date Sent</div>
+            <div className="header-cell">Auto Send</div>
+            <div className="header-cell">Status</div>
+            <div className="header-cell">Actions</div>
+          </div>
 
-            return (
-              <div key={row.id} className="table-row">
-                <div className="table-cell">{renderCell(displayRow,'phone')}</div>
-                <div className="table-cell">{renderCell(displayRow,'name')}</div>
-                <div className="table-cell">{formatDate(row.last_date_sent)}</div>
+          {/* Table Body */}
+          <div className="table-body">
+            {/* Render existing contact rows */}
+            {rows.map((row, index) => {
+              const isFirstRow = index === 0;
+              const displayRow = { ...row, locked: isFirstRow };
 
+              return (
+                <div key={row.id} className="table-row">
+                  <div className="table-cell">{renderCell(displayRow,'phone')}</div>
+                  <div className="table-cell">{renderCell(displayRow,'name')}</div>
+                  <div className="table-cell">{formatDate(row.last_date_sent)}</div>
+
+                  <div className="table-cell">
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={row.auto_send}
+                        disabled={isFirstRow}
+                        onChange={() => !isFirstRow && patch(row.id,{auto_send:!row.auto_send})}
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div className="table-cell">{renderCell(displayRow,'status')}</div>
+
+                  <div className="table-cell action-cell">
+                    <button
+                      className="send-button"
+                      disabled={loadingCompany}
+                      onClick={() => sendSms(row.id, row.phone)}
+                    >Send</button>
+                    {!isFirstRow && (
+                      <button className="delete-button" onClick={() => delRow(row.id)}>✕</button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {/* Render the new row form if active */}
+            {newRow && (
+              <div className="table-row">
+                <div className="table-cell">
+                  <input type="tel" name="phone" value={newRow.phone} onChange={handleNewRowChange} placeholder="+15551234567" />
+                </div>
+                <div className="table-cell">
+                  <input type="text" name="name" value={newRow.name} onChange={handleNewRowChange} placeholder="Name" />
+                </div>
+                <div className="table-cell">N/A</div>
                 <div className="table-cell">
                   <label className="toggle-switch">
-                    <input
-                      type="checkbox"
-                      checked={row.auto_send}
-                      disabled={isFirstRow}
-                      onChange={() => !isFirstRow && patch(row.id,{auto_send:!row.auto_send})}
-                    />
+                    <input type="checkbox" name="auto_send" checked={newRow.auto_send} onChange={handleNewRowChange} />
                     <span className="toggle-slider"></span>
                   </label>
                 </div>
-
-                <div className="table-cell">{renderCell(displayRow,'status')}</div>
-
+                <div className="table-cell">
+                  <select name="status" value={newRow.status} onChange={handleNewRowChange}>
+                    {statusOptions.map(o => <option key={o}>{o}</option>)}
+                  </select>
+                </div>
                 <div className="table-cell action-cell">
-                  <button
-                    className="send-button"
-                    disabled={loadingCompany}
-                    onClick={() => sendSms(row.id, row.phone)}
-                  >Send</button>
-                  {!isFirstRow && (
-                    <button className="delete-button" onClick={() => delRow(row.id)}>✕</button>
+                  {newRow.phone && newRow.name && (
+                    <button className="send-button" onClick={handleSaveNewRow}>✓</button>
                   )}
+                  <button className="delete-button" onClick={handleCancelNewRow}>✕</button>
                 </div>
               </div>
-            );
-          })}
-          {/* Render the new row form if active */}
-          {newRow && (
-            <div className="table-row">
-              <div className="table-cell">
-                <input type="tel" name="phone" value={newRow.phone} onChange={handleNewRowChange} placeholder="+15551234567" />
-              </div>
-              <div className="table-cell">
-                <input type="text" name="name" value={newRow.name} onChange={handleNewRowChange} placeholder="Name" />
-              </div>
-              <div className="table-cell">N/A</div>
-              <div className="table-cell">
-                <label className="toggle-switch">
-                  <input type="checkbox" name="auto_send" checked={newRow.auto_send} onChange={handleNewRowChange} />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-              <div className="table-cell">
-                <select name="status" value={newRow.status} onChange={handleNewRowChange}>
-                  {statusOptions.map(o => <option key={o}>{o}</option>)}
-                </select>
-              </div>
-              <div className="table-cell action-cell">
-                {newRow.phone && newRow.name && (
-                  <button className="send-button" onClick={handleSaveNewRow}>✓</button>
-                )}
-                <button className="delete-button" onClick={handleCancelNewRow}>✕</button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Add New Row Button */}
-      <div className="add-row-container">
-        <button className="add-row-button" onClick={addRow}>+</button>
-      </div>
+        {/* Add New Row Button */}
+        <div className="add-row-container">
+          <button className="add-row-button" onClick={addRow}>+</button>
+        </div>
+      </section>
+
+      <footer className="footer">
+        <p>&copy; 2024 ReviewStream. All rights reserved.</p>
+      </footer>
     </div>
   );
 }

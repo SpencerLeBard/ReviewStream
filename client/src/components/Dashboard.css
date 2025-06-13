@@ -1,33 +1,39 @@
 .dashboard-stats {
   display: flex;
-  gap: 2rem;
+  justify-content: space-around;
   margin-bottom: 2rem;
-  justify-content: center;
+  gap: 1rem;
 }
 
 .stat-card {
-  background-color: white;
-  border-radius: 8px;
+  background-color: #ffffff;
   padding: 1.5rem;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  min-width: 150px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   text-align: center;
   flex: 1;
-  max-width: 300px;
 }
 
 .stat-card h3 {
+  margin-bottom: 0.5rem;
+  color: #555;
   font-size: 1rem;
-  color: #7f8c8d;
-  margin-top: 0;
-  margin-bottom: 1rem;
 }
 
 .stat-number {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #3498db;
-  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #6c63ff;
+}
+
+.dashboard-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.dashboard-row > .about-card {
+  flex: 1 1 400px;
 }
 
 /* Filter styles */

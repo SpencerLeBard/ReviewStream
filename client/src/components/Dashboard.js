@@ -11,14 +11,14 @@ import {
 } from 'recharts';
 import './Reviews.css';
 import './Dashboard.css';
+import './Home.css';
+import './About.css';
 
 // Helper functions for formatting data
 const renderStars = (rating) =>
   rating
     ? '★★★★★'.slice(0, rating) + '☆☆☆☆☆'.slice(0, 5 - rating)
     : 'No rating';
-
-const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
 const formatDate = (d) =>
   d
@@ -137,15 +137,12 @@ const ReviewFilters = React.memo(({
  */
 const ReviewCard = React.memo(({ review }) => (
   <div className="review-card">
-    <div className="review-header">
-      <div className="reviewer-initial">{getInitial(review.phone_from)}</div>
-      <div>
-        <h3 className="reviewer-name">{formatPhoneNumber(review.phone_from)}</h3>
-        <span className="review-date">{formatDate(review.created_at)}</span>
-      </div>
+    <div className="review-card-header">
+      <h3 className="reviewer-name">{formatPhoneNumber(review.phone_from)}</h3>
+      <div className="review-rating">{renderStars(review.rating)}</div>
     </div>
     <p className="review-content">{review.body || 'No review text provided.'}</p>
-    <div className="review-rating">{renderStars(review.rating)}</div>
+    <span className="review-date">{formatDate(review.created_at)}</span>
   </div>
 ));
 
@@ -154,7 +151,7 @@ const ReviewCard = React.memo(({ review }) => (
  * Shows a message if no reviews match the current filters.
  */
 const ReviewsList = React.memo(({ reviews }) => (
-  <div className="reviews-list">
+  <div className="reviews-grid">
     {reviews.length === 0 ? (
       <div className="no-reviews-message">
         No reviews match your current filters.
@@ -277,26 +274,46 @@ const Dashboard = () => {
 
   // Render the main dashboard UI
   return (
-    <div className="reviews-container">
-      <div className="reviews-header">
-        <h1 className="reviews-title">Dashboard for {company.name}</h1>
-        <p className="reviews-subtitle">Here are all the reviews for your company</p>
-      </div>
+    <div className="home-container">
+      <header className="hero">
+        <div className="hero-content">
+          <h1 className="heading">Dashboard for {company.name}</h1>
+          <p className="subheading">Here are all the reviews for your company</p>
+        </div>
+      </header>
 
-      {/* Render modular components for stats, chart, filters, and the reviews list */}
-      <DashboardStats reviews={filteredReviews} />
+      <section className="features-section">
+        <div className="about-card">
+          <h2 className="section-heading">Aggregate Statistics</h2>
+          <DashboardStats reviews={filteredReviews} />
+        </div>
+      </section>
+      
+      <section className="features-section dashboard-row">
+        <div className="about-card">
+          <h2 className="section-heading">Filter & Search Reviews</h2>
+          <ReviewFilters
+            activeStarFilter={activeStarFilter}
+            onStarFilterChange={handleStarFilter}
+            dateRange={dateRange}
+            onDateChange={handleDateChange}
+            onClearFilters={clearFilters}
+          />
+        </div>
+        <div className="about-card">
+          <h2 className="section-heading">Ratings Distribution</h2>
+          <ReviewChart data={chartData} />
+        </div>
+      </section>
 
-      <ReviewChart data={chartData} />
+      <section className="testimonials-section">
+        <h2 className="section-heading">Filtered Reviews</h2>
+        <ReviewsList reviews={filteredReviews} />
+      </section>
 
-      <ReviewFilters
-        activeStarFilter={activeStarFilter}
-        onStarFilterChange={handleStarFilter}
-        dateRange={dateRange}
-        onDateChange={handleDateChange}
-        onClearFilters={clearFilters}
-      />
-
-      <ReviewsList reviews={filteredReviews} />
+      <footer className="footer">
+        <p>&copy; 2024 ReviewStream. All rights reserved.</p>
+      </footer>
     </div>
   );
 };
