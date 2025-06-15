@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
-import './Console.css';
-import './Settings.css';
-import './Home.css';
-import './About.css';
+import './StylingUtility.css';
 
 const Settings = () => {
   const [globalAutoSend, setGlobalAutoSend] = useState(false);

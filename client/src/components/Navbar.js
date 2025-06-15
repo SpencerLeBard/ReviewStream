@@ -24,12 +24,18 @@ export default function Navbar() {
         {open ? '✕' : '☰'}
       </button>
       <div className="left-nav-links">
-        {!user && <NavLink to="/" end className="nav-item">Home</NavLink>}
-        {!user && <NavLink to="/reviews" className="nav-item">Reviews</NavLink>}
-        {!user && <NavLink to="/about" className="nav-item">About</NavLink>}
-        {user && <NavLink to="/dashboard" className="nav-item">Dashboard</NavLink>}
-        {user && <NavLink to="/console" className="nav-item">Console</NavLink>}
-        {user && <NavLink to="/settings" className="nav-item">Settings</NavLink>}
+        <div className="main-nav-links-container">
+          <NavLink to="/" end className="nav-item">Home</NavLink>
+          <NavLink to="/reviews" className="nav-item">Reviews</NavLink>
+          <NavLink to="/about" className="nav-item">About</NavLink>
+          {user && (
+            <React.Fragment>
+              <NavLink to="/dashboard" className="nav-item">Dashboard</NavLink>
+              <NavLink to="/console" className="nav-item">Console</NavLink>
+              <NavLink to="/settings" className="nav-item">Settings</NavLink>
+            </React.Fragment>
+          )}
+        </div>
       </div>
       <div className="right-nav-links">
         {user ? (

@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
-import './Console.css';
-import './Home.css';
-import './About.css';
+import './StylingUtility.css';
 import { useSession } from '@supabase/auth-helpers-react';
 
 // Options for the status dropdown
@@ -313,7 +311,7 @@ export default function Console() {
                       className="send-button"
                       disabled={loadingCompany}
                       onClick={() => sendSms(row.id, row.phone)}
-                    >Send</button>
+                    >{row.status === 'New Number' ? 'Send' : 'Resend'}</button>
                     {!isFirstRow && (
                       <button className="delete-button" onClick={() => delRow(row.id)}>✕</button>
                     )}

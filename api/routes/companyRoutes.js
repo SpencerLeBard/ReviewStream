@@ -94,11 +94,12 @@ router.post('/:id/send-review', async (req, res) => {
     
     const text = `Thanks for visiting ${company.name}. Reply with 1-5 stars and feedback.`;
     
-    let formattedPhone = customerPhone.trim();
-    if (/^\+[2-9]\d{9}$/.test(formattedPhone)) {
-      formattedPhone = `+1${formattedPhone.substring(1)}`;
-    } else if (/^\d{10}$/.test(formattedPhone)) {
-      formattedPhone = `+1${formattedPhone}`;
+    // Normalize phone number to E.164 format
+    const justDigits = (customerPhone || '').replace(/\D/g, '');
+    let formattedPhone = `+${justDigits}`;
+    if (justDigits.length === 10) {
+      // Assume US/Canada number if 10 digits and add +1
+      formattedPhone = `+1${justDigits}`;
     }
 
     const msg = await twilioClient.messages.create({

@@ -1,5 +1,5 @@
 import React from 'react';
-import './About.css';
+import './StylingUtility.css';
 
 const About = () => {
   return (
@@ -39,21 +39,21 @@ const About = () => {
       <section className="team-section">
         <h2 className="section-heading">Our Team</h2>
         <p className="team-intro">
-          ReviewStream was founded by a small team of developers and marketers who saw the need for a more streamlined approach 
-          to customer reviews.
+          ReviewStream was founded by 2 friends who saw the need for a more streamlined approach 
+          to customer reviews.  Just text back!
         </p>
         
         <div className="team-grid">
           <div className="team-member-card">
             <div className="team-member-image">👨‍💻</div>
             <h3 className="team-member-name">Spencer LeBard</h3>
-            <p className="team-member-role">CTO</p>
+            <p className="team-member-role">Chief Technology Officer</p>
           </div>
           
           <div className="team-member-card">
             <div className="team-member-image">👨‍💼</div>
             <h3 className="team-member-name">D</h3>
-            <p className="team-member-role">Marketing Director</p>
+            <p className="team-member-role">Chief Marketing Officer</p>
           </div>
         </div>
       </section>

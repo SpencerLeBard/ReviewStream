@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Reviews.css';
+import './StylingUtility.css';
 
 const Reviews = () => {
   const [reviews, setReviews] = useState([]);
@@ -49,10 +49,6 @@ const Reviews = () => {
     return stars;
   };
 
-  const getInitial = (name) => {
-    return name ? name.charAt(0).toUpperCase() : '?';
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return 'No date';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -60,10 +56,6 @@ const Reviews = () => {
       month: 'long',
       day: 'numeric',
     });
-  };
-
-  const formatPhoneNumber = (phoneNumber) => {
-    return phoneNumber || 'Unknown';
   };
 
   return (

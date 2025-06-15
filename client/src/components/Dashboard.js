@@ -9,10 +9,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts';
-import './Reviews.css';
-import './Dashboard.css';
-import './Home.css';
-import './About.css';
+import './StylingUtility.css';
 
 // Helper functions for formatting data
 const renderStars = (rating) =>
