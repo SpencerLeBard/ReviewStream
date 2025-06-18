@@ -1,26 +1,38 @@
 {
   "version": 2,
+
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs22.x",
+      "memory": 1024
+    }
+  },
+
   "builds": [
     {
-      "src": "api/server.js",
+      "src": "api/**/*.js",
       "use": "@vercel/node"
     },
     {
-      "src": "client",
+      "src": "client/package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "build"
       }
     }
   ],
-  "rewrites": [
+
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/server.js"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/client/$1"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
