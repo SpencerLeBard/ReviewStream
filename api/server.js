@@ -12,6 +12,8 @@ const cors     = require('cors');
 const morgan   = require('morgan');
 const twilio   = require('twilio');
 const { createClient } = require('@supabase/supabase-js');
+const logger = require('./logger');
+const authLogger = require('./authLogger');
 
 const app = express();
 
@@ -31,7 +33,7 @@ const COMPANY_ID = 3;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(morgan('dev'));
+app.use(morgan('combined', { stream: logger.stream })); // Use winston stream
 
 const reviewRoutes = require('./routes/reviewRoutes');
 app.use('/api/reviews', reviewRoutes);
@@ -87,54 +89,101 @@ app.patch('/api/contacts/:id', async (req, res) => {
 app.delete('/api/contacts/:id', async (req, res) => {
   const { id } = req.params;
   const { error } = await supabase.from('contacts').delete().eq('id', id);
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    logger.error('Error deleting contact', { error, contactId: id });
+    return res.status(500).json({ error: error.message });
+  }
+  logger.info('Contact deleted successfully', { contactId: id });
   res.json({ ok: true });
 });
 
 /* ──────────────────────────── INBOUND SMS WEBHOOK ──────────────────────────── */
 app.post('/api/text-webhook', async (req, res) => {
   const { From, Body = '', SmsSid } = req.body || {};
+  logger.info(`Received SMS from ${From} with SID ${SmsSid}`, { from: From, body: Body, smsSid: SmsSid });
 
-  const { data: reqRow } = await supabase
+  const { data, error: reqError } = await supabase
     .from('review_requests')
     .select('id,company_id')
     .eq('customer_phone', From)
     .eq('responded', false)
     .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+    .limit(1);
 
-  if (!reqRow)
+  if (reqError) {
+    logger.error('Error fetching review request', { error: reqError, from: From });
+    return res.status(500).json({ error: 'database error' });
+  }
+
+  const reqRow = data && data.length > 0 ? data[0] : null;
+
+  if (!reqRow) {
+    logger.warn(`No open review request found for ${From}`, { from: From, smsSid: SmsSid });
     return res.status(400).json({ error: 'no open review request' });
+  }
 
   const ratingMatch = Body.match(/\b([1-5])\s*stars?\b/i);
   const rating      = ratingMatch ? parseInt(ratingMatch[1], 10) : null;
   const bodyText    = Body.trim();
-  if (!bodyText && rating === null)
+  if (!bodyText && rating === null) {
+    logger.info(`Empty message from ${From}, sending thanks.`, { from: From, smsSid: SmsSid });
     return res
       .type('text/xml')
       .send('<Response><Message>Thanks!</Message></Response>');
+  }
 
-  await supabase.from('reviews').insert([{
+  const { error: reviewInsertError } = await supabase.from('reviews').insert([{
     company_id: reqRow.company_id,
     phone_from: From,
     body:       bodyText,
     rating
   }]);
 
-  await supabase
+  if (reviewInsertError) {
+    logger.error('Error inserting review', { error: reviewInsertError, from: From, smsSid: SmsSid });
+    // Decide if you want to stop execution here or just log the error
+  }
+
+  const { error: requestUpdateError } = await supabase
     .from('review_requests')
     .update({ responded: true, response_sid: SmsSid, rating, body: bodyText })
     .eq('id', reqRow.id);
+
+  if (requestUpdateError) {
+    logger.error('Error updating review_request', { error: requestUpdateError, reviewRequestId: reqRow.id, smsSid: SmsSid });
+  }
+
+  logger.info(`Successfully processed review from ${From}`, { from: From, rating, smsSid: SmsSid });
 
   res
     .type('text/xml')
     .send('<Response><Message>Thanks for your feedback!</Message></Response>');
 });
 
+app.post('/api/log-auth', (req, res) => {
+  const { event, user, error } = req.body;
+  if (error) {
+    authLogger.error(`Authentication error: ${event}`, { error, user });
+  } else {
+    authLogger.info(`User ${event}`, { user });
+  }
+  res.sendStatus(204);
+});
+
+app.post('/api/twilio-status-webhook', (req, res) => {
+  const { MessageSid, MessageStatus, ErrorCode, ErrorMessage } = req.body;
+  logger.info('Twilio status update', { MessageSid, MessageStatus, ErrorCode, ErrorMessage });
+  
+  if (MessageStatus === 'failed' || MessageStatus === 'undelivered') {
+    logger.error('Twilio message failed', { MessageSid, MessageStatus, ErrorCode, ErrorMessage });
+  }
+
+  res.sendStatus(204);
+});
+
 if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 5001;
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  app.listen(PORT, () => logger.info(`Server running on port ${PORT}`));
 }
 
 module.exports = app;

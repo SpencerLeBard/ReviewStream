@@ -10,7 +10,18 @@ export default function Navbar() {
   const user = useUser();
   const navigate = useNavigate();
 
+  const logAuthEvent = (event, user, error = null) => {
+    fetch('/api/log-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, user, error })
+    });
+  };
+
   const handleLogout = async () => {
+    if (user) {
+      logAuthEvent('logout', user.email);
+    }
     await supabase.auth.signOut();
     navigate('/');
   };

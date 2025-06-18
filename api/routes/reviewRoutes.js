@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
+const logger = require('../logger');
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -21,7 +22,7 @@ router.get('/', async (req, res) => {
     
     res.json(data);
   } catch (error) {
-    console.error('Error fetching reviews:', error);
+    logger.error('Error fetching reviews:', { error: error.message });
     res.status(500).json({ message: 'Failed to fetch reviews', error: error.message });
   }
 });
@@ -42,7 +43,7 @@ router.get('/company/:companyId', async (req, res) => {
     
     res.json(data);
   } catch (error) {
-    console.error('Error fetching company reviews:', error);
+    logger.error('Error fetching company reviews:', { error: error.message, companyId: req.params.companyId });
     res.status(500).json({ message: 'Failed to fetch company reviews', error: error.message });
   }
 });
@@ -66,7 +67,7 @@ router.post('/', async (req, res) => {
     
     res.status(201).json(data[0]);
   } catch (error) {
-    console.error('Error creating review:', error);
+    logger.error('Error creating review:', { error: error.message, body: req.body });
     res.status(400).json({ message: error.message });
   }
 });
@@ -89,7 +90,7 @@ router.get('/:id', async (req, res) => {
     
     res.json(data);
   } catch (error) {
-    console.error('Error fetching review:', error);
+    logger.error('Error fetching review:', { error: error.message, reviewId: req.params.id });
     res.status(500).json({ message: 'Failed to fetch review', error: error.message });
   }
 });

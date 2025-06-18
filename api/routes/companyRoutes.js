@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 const twilio = require('twilio');
+const logger = require('../logger');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -25,7 +26,7 @@ router.get('/', async (req, res) => {
     
     res.json(data);
   } catch (error) {
-    console.error('Error fetching companies:', error);
+    logger.error('Error fetching companies', { error });
     res.status(500).json({ error: 'Failed to fetch companies' });
   }
 });
@@ -47,7 +48,7 @@ router.get('/:id', async (req, res) => {
     
     res.json(data);
   } catch (error) {
-    console.error('Error fetching company:', error);
+    logger.error('Error fetching company', { error, companyId: req.params.id });
     res.status(500).json({ error: 'Failed to fetch company' });
   }
 });
@@ -68,7 +69,7 @@ router.get('/:id/reviews', async (req, res) => {
     
     res.json(data);
   } catch (error) {
-    console.error('Error fetching company reviews:', error);
+    logger.error('Error fetching company reviews', { error, companyId: req.params.id });
     res.status(500).json({ error: 'Failed to fetch company reviews' });
   }
 });
@@ -102,11 +103,16 @@ router.post('/:id/send-review', async (req, res) => {
       formattedPhone = `+1${justDigits}`;
     }
 
+    const statusCallbackUrl = `${process.env.API_BASE_URL}/api/twilio-status-webhook`;
+
     const msg = await twilioClient.messages.create({
       body: text,
       from: process.env.TWILIO_PHONE,
-      to: formattedPhone
+      to: formattedPhone,
+      statusCallback: statusCallbackUrl
     });
+
+    logger.info('Review request sent', { messageSid: msg.sid, to: formattedPhone, companyId });
     
     // Insert review request into database
     const { error } = await supabase.from('review_requests').insert([{
@@ -119,7 +125,7 @@ router.post('/:id/send-review', async (req, res) => {
     
     res.json({ sid: msg.sid });
   } catch (error) {
-    console.error('Error sending review request:', error);
+    logger.error('Error sending review request', { error: error.message, companyId: req.params.id, customerPhone: req.body.customerPhone });
     res.status(500).json({ error: `Failed to send review request: ${error.message}` });
   }
 });
@@ -169,7 +175,7 @@ router.get('/:id/stats', async (req, res) => {
     
     res.json(stats);
   } catch (error) {
-    console.error('Error fetching company statistics:', error);
+    logger.error('Error fetching company statistics', { error, companyId: req.params.id });
     res.status(500).json({ error: 'Failed to fetch company statistics' });
   }
 });
