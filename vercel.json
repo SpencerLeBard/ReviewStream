@@ -3,7 +3,7 @@
 
   "builds": [
     {
-      "src": "api/package.json",
+      "src": "api/server.js",
       "use": "@vercel/node"
     },
     {
@@ -16,8 +16,29 @@
   ],
 
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/server.js" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/server.js"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "/client/static/$1"
+    },
+    {
+      "src": "/ReviewStream.png",
+      "dest": "/client/ReviewStream.png"
+    },
+    {
+      "src": "/ReviewStream2.png",
+      "dest": "/client/ReviewStream2.png"
+    },
+    {
+      "src": "/asset-manifest.json",
+      "dest": "/client/asset-manifest.json"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/index.html"
+    }
   ]
 }
