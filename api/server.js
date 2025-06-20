@@ -116,7 +116,18 @@ app.delete('/api/contacts/:id', async (req, res) => {
 /* ──────────────────────────── INBOUND SMS WEBHOOK ──────────────────────────── */
 app.post('/api/text-webhook', async (req, res) => {
   const { From, Body = '', SmsSid } = req.body || {};
-  logger.info(`Received SMS from ${From} with SID ${SmsSid}`, { from: From, body: Body, smsSid: SmsSid });
+  logger.info('Received Twilio text webhook', {
+    from: From,
+    smsSid: SmsSid,
+    webhook: {
+      url: req.originalUrl,
+      method: req.method,
+      ip: req.ip,
+      headers: req.headers,
+      query: req.query,
+      body: req.body,
+    }
+  });
 
   const { data, error: reqError } = await supabase
     .from('review_requests')
@@ -187,11 +198,25 @@ app.post('/api/log-auth', (req, res) => {
 });
 
 app.post('/api/twilio-status-webhook', (req, res) => {
-  const { MessageSid, MessageStatus, ErrorCode, ErrorMessage } = req.body;
-  logger.info('Twilio status update', { MessageSid, MessageStatus, ErrorCode, ErrorMessage });
-  
+  const { MessageSid, MessageStatus } = req.body;
+
+  const logDetails = {
+    messageSid: MessageSid,
+    status: MessageStatus,
+    webhook: {
+      url: req.originalUrl,
+      method: req.method,
+      ip: req.ip,
+      headers: req.headers,
+      query: req.query,
+      body: req.body,
+    }
+  };
+
   if (MessageStatus === 'failed' || MessageStatus === 'undelivered') {
-    logger.error('Twilio message failed', { MessageSid, MessageStatus, ErrorCode, ErrorMessage });
+    logger.error(`Twilio message failed: ${MessageSid}`, logDetails);
+  } else {
+    logger.info(`Twilio status update: ${MessageSid} is ${MessageStatus}`, logDetails);
   }
 
   res.sendStatus(204);
