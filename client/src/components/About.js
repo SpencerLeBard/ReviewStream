@@ -45,13 +45,13 @@ const About = () => {
         
         <div className="team-grid">
           <div className="team-member-card">
-            <div className="team-member-image">👨‍💻</div>
+            <div className="team-member-image">👨🏼‍💻</div>
             <h3 className="team-member-name">Spencer LeBard</h3>
             <p className="team-member-role">Chief Technology Officer</p>
           </div>
           
           <div className="team-member-card">
-            <div className="team-member-image">👨‍💼</div>
+            <div className="team-member-image">👨🏻‍💼</div>
             <h3 className="team-member-name">D</h3>
             <p className="team-member-role">Chief Marketing Officer</p>
           </div>

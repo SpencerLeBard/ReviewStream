@@ -5,9 +5,23 @@ const logger = require('../logger');
 
 // Initialize Supabase client
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY
 );
+
+// Middleware to check if Supabase is initialized
+const checkSupabaseInitialized = (req, res, next) => {
+  if (!supabase) {
+    const errorMessage = 'Server configuration error: Supabase client is not initialized. Check environment variables.';
+    logger.error(errorMessage);
+    // Use a 400 for POST requests as it's a client-side (config) error leading to the issue.
+    const statusCode = req.method === 'POST' ? 400 : 500;
+    return res.status(statusCode).json({ message: 'Server configuration error.', error: errorMessage });
+  }
+  next();
+};
+
+router.use(checkSupabaseInitialized);
 
 // GET all reviews
 router.get('/', async (req, res) => {
