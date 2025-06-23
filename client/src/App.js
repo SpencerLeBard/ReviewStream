@@ -11,11 +11,13 @@ import Console from './components/Console';
 import Settings from './components/Settings';
 import { Routes, Route } from 'react-router-dom';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Analytics } from '@vercel/analytics/react';
 
 export default function App() {
   return (
     <SessionContextProvider supabaseClient={supabase}>
       <SpeedInsights />
+      <Analytics />
       <Navbar />
       <Routes>
         <Route path="/"        element={<Home />} />
