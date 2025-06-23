@@ -10,10 +10,12 @@ import Dashboard from './components/Dashboard';
 import Console from './components/Console';
 import Settings from './components/Settings';
 import { Routes, Route } from 'react-router-dom';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 export default function App() {
   return (
     <SessionContextProvider supabaseClient={supabase}>
+      <SpeedInsights />
       <Navbar />
       <Routes>
         <Route path="/"        element={<Home />} />
