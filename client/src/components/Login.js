@@ -1,8 +1,8 @@
 import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import './StylingUtility.css';
 
 const logAuthEvent = (event, user, error = null) => {
   fetch('/api/log-auth', {
@@ -26,10 +26,22 @@ export default function Login() {
   }, [navigate]);
 
   return (
-    <Auth
-      supabaseClient={supabase}
-      appearance={{ theme: ThemeSupa }}
-      providers={[]}                       
-    />
+    <div className="home-container">
+      <header className="hero">
+        <div className="hero-content">
+          <h1 className="heading">Sign In to Your Account</h1>
+          <p className="subheading">
+            Access your dashboard and manage your reviews.
+          </p>
+          <div className="about-card" style={{ maxWidth: '400px', margin: '2rem auto', background: 'rgba(255,255,255,0.95)' }}>
+            <Auth
+              supabaseClient={supabase}
+              appearance={{}}
+              providers={[]}
+            />
+          </div>
+        </div>
+      </header>
+    </div>
   );
 }
