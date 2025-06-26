@@ -31,9 +31,6 @@ const twilioClient = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
-/* Spencer's Company for POC */
-const COMPANY_ID = 3;
-
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -57,61 +54,11 @@ app.use('/api/reviews', reviewRoutes);
 const companyRoutes = require('./routes/companyRoutes');
 app.use('/api/companies', companyRoutes);
 
-/* ──────────────────────────── COMPANY INFO  ──────────────────────────── */
-/* Dashboard expects this exact path: /api/secure/users/company            */
-app.get('/api/secure/users/company', async (_req, res) => {
-  const { data, error } = await supabase
-    .from('companies')
-    .select('*')
-    .eq('id', COMPANY_ID)
-    .single();
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
+const userRoutes = require('./routes/userRoutes');
+app.use('/api/secure/users', userRoutes);
 
-/* ──────────────────────────── CONTACTS CRUD ──────────────────────────── */
-app.get('/api/contacts', async (_req, res) => {
-  const { data, error } = await supabase
-    .from('contacts')
-    .select('*')
-    .eq('company_id', COMPANY_ID)
-    .order('created_at');
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
-
-app.post('/api/contacts', async (req, res) => {
-  const { data, error } = await supabase
-    .from('contacts')
-    .insert([{ ...req.body, company_id: COMPANY_ID }])
-    .select('*')
-    .single();
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
-
-app.patch('/api/contacts/:id', async (req, res) => {
-  const { id } = req.params;
-  const { data, error } = await supabase
-    .from('contacts')
-    .update({ ...req.body, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select('*')
-    .single();
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
-
-app.delete('/api/contacts/:id', async (req, res) => {
-  const { id } = req.params;
-  const { error } = await supabase.from('contacts').delete().eq('id', id);
-  if (error) {
-    logger.error('Error deleting contact', { error, contactId: id });
-    return res.status(500).json({ error: error.message });
-  }
-  logger.info('Contact deleted successfully', { contactId: id });
-  res.json({ ok: true });
-});
+const contactsRoutes = require('./routes/contactsRoutes');
+app.use('/api/secure/contacts', contactsRoutes);
 
 /* ──────────────────────────── INBOUND SMS WEBHOOK ──────────────────────────── */
 app.post('/api/text-webhook', async (req, res) => {

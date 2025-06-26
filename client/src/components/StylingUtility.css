@@ -55,6 +55,13 @@ body {
   padding: 4rem 2rem;
 }
 
+.features-section {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
 .about-details-section {
   padding: 4rem 2rem;
   max-width: 900px;
@@ -415,7 +422,7 @@ body {
   border-bottom: none;
 }
 
-.table-row:hover {
+.table-row:not(.new-row):hover {
   background-color: #f8f9fa;
 }
 
@@ -582,16 +589,48 @@ input:checked + .toggle-slider:before {
 
 /* --- Settings --- */
 .settings-panel {
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  overflow: hidden;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-  background-color: #fff;
-  padding: 1rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.save-button-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.save-button {
+  background-color: #007bff; /* Blue */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px; /* Larger padding */
+  font-size: 1.1rem;   /* Larger font */
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+.save-button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+.save-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
 .setting-row {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
   padding: 1rem;
   border-bottom: 1px solid #e9ecef;
   align-items: center;
@@ -602,13 +641,14 @@ input:checked + .toggle-slider:before {
 }
 
 .setting-label {
-  flex: 1;
+  flex: 1 1 150px;
   font-weight: 500;
   color: #495057;
+  margin-bottom: 0.5rem;
 }
 
 .setting-control {
-  flex: 2;
+  flex: 2 1 300px;
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -716,6 +756,49 @@ input:checked + .toggle-slider:before {
   font-weight: 600;
 }
 
+/* --- Toast Notification --- */
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(150px);
+  padding: 18px 32px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  opacity: 0;
+  transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+  cursor: pointer;
+  min-width: 320px;
+  justify-content: center;
+}
+
+.toast-notification.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.toast-notification.success {
+  background: linear-gradient(45deg, #6c63ff, #4a4de6);
+}
+
+.toast-notification.error {
+  background: linear-gradient(45deg, #e74c3c, #c0392b);
+}
+
+.toast-icon {
+  font-size: 1.6rem;
+}
+
+.toast-message {
+  margin: 0;
+  font-size: 1.15rem;
+}
 
 /* --- Home Page Specifics --- */
 .cta-button {
@@ -791,9 +874,69 @@ input:checked + .toggle-slider:before {
   opacity: 0.8;
 }
 
-
 /* --- Media Queries --- */
 @media (max-width: 768px) {
+  .hero {
+    padding: 4rem 1.5rem;
+    clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+  }
+  .heading {
+    font-size: 2.5rem;
+  }
+  .subheading {
+    font-size: 1.1rem;
+  }
+  
+  .table-header {
+    display: none;
+  }
+
+  .table-row {
+    grid-template-columns: 1fr;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .table-cell {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    flex-wrap: wrap;
+  }
+
+  .table-cell:last-child {
+    border-bottom: none;
+  }
+
+  .table-cell::before {
+    content: attr(data-label);
+    font-weight: bold;
+    margin-right: 1rem;
+  }
+
+  .table-cell.action-cell {
+    justify-content: flex-start;
+    padding-top: 1rem;
+  }
+  
+  .table-cell.action-cell::before {
+    display: none;
+  }
+  
+  .table-cell input, .table-cell select {
+    width: auto;
+    flex-grow: 1;
+  }
+  
+  .action-cell {
+    gap: 1rem;
+  }
+  
   .dashboard-stats {
     flex-direction: column;
     align-items: center;
@@ -810,5 +953,24 @@ input:checked + .toggle-slider:before {
   
   .star-filters {
     justify-content: center;
+  }
+
+  .setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .setting-control {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: 0.5rem;
+  }
+  
+  .message-control {
+    align-items: flex-start;
+  }
+
+  .message-control .toggle-switch {
+    align-self: flex-end;
   }
 } 

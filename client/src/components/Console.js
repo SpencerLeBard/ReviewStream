@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
+import { useToast } from './ToastProvider';
 import './StylingUtility.css';
 import { useSession } from '@supabase/auth-helpers-react';
 
@@ -29,16 +30,24 @@ export default function Console() {
   const [loadingCompany, setLoadingCompany] = useState(true); // Loading state for company data
   const [newRow, setNewRow] = useState(null); // Holds data for a new contact being added
   const session = useSession(); // Supabase auth session
+  const { showToast } = useToast();
 
   // --- DATA FETCHING ---
 
   // Fetch all contacts from the database when the component mounts
   useEffect(() => {
+    if (!session) return;
     (async () => {
       const { data } = await supabase.from('contacts').select('*').order('created_at');
-      if (data) setRows(data);
+      const r = await fetch('/api/secure/contacts', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (r.ok) {
+        const data = await r.json();
+        setRows(data);
+      }
     })();
-  }, []);
+  }, [session]);
 
   // Fetch the user's company information when the session becomes available
   useEffect(() => {
@@ -120,24 +129,28 @@ export default function Console() {
    */
   const handleSaveNewRow = useCallback(async () => {
     if (!company) {
-      alert('Company information is not available. Please try again.');
+      showToast('Company information is not available. Please try again.', 'error');
       return;
     }
 
-    const { data, error } = await supabase
-      .from('contacts')
-      .insert([{ ...newRow, company_id: company.id }])
-      .select()
-      .single();
+    const res = await fetch('/api/secure/contacts', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify(newRow),
+    });
 
-    if (error) {
-      alert(`Error saving contact: ${error.message}`);
-    } else if (data) {
-      // Add the new row to the state without re-fetching all data
+    if (res.ok) {
+      const data = await res.json();
       setRows(r => [...r, data]);
       setNewRow(null);
+    } else {
+      const err = await res.json();
+      showToast(`Error saving contact: ${err.error}`, 'error');
     }
-  }, [company, newRow]);
+  }, [company, newRow, session, showToast]);
 
   /**
    * Deletes a contact after user confirmation.
@@ -146,14 +159,20 @@ export default function Console() {
   const delRow = useCallback(async id => {
     if (window.confirm('Are you sure you want to delete this contact?')) {
       try {
-        const { error } = await supabase.from('contacts').delete().eq('id', id);
-        if (error) throw error;
+        const res = await fetch(`/api/secure/contacts/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error);
+        }
         setRows(r => r.filter(row => row.id !== id));
       } catch (error) {
-        alert(`Error deleting contact: ${error.message}`);
+        showToast(`Error deleting contact: ${error.message}`, 'error');
       }
     }
-  }, []);
+  }, [session, showToast]);
 
   /**
    * Sends a review request SMS to a contact.
@@ -164,7 +183,7 @@ export default function Console() {
     console.log(`sendSms called with id: ${id}, phone: ${phone}`);
 
     if (!company) {
-      alert('Company information could not be loaded. Please refresh and try again.');
+      showToast('Company information could not be loaded. Please refresh and try again.', 'error');
       console.error('Company not loaded');
       return;
     }
@@ -183,13 +202,13 @@ export default function Console() {
       }
 
       await patch(id, { status: 'Sent', last_date_sent: new Date().toISOString() });
-      alert('Sent!');
+      showToast('Sent!');
 
     } catch (error) {
       console.error('Error sending SMS or updating contact:', error);
-      alert(`Error: ${error.message}`);
+      showToast(`Error: ${error.message}`, 'error');
     }
-  }, [company, patch]);
+  }, [company, patch, showToast]);
 
   // --- RENDER LOGIC ---
 
@@ -288,11 +307,11 @@ export default function Console() {
 
               return (
                 <div key={row.id} className="table-row">
-                  <div className="table-cell">{renderCell(displayRow,'phone')}</div>
-                  <div className="table-cell">{renderCell(displayRow,'name')}</div>
-                  <div className="table-cell">{formatDate(row.last_date_sent)}</div>
+                  <div className="table-cell" data-label="Phone">{renderCell(displayRow,'phone')}</div>
+                  <div className="table-cell" data-label="Name">{renderCell(displayRow,'name')}</div>
+                  <div className="table-cell" data-label="Last Date Sent">{formatDate(row.last_date_sent)}</div>
 
-                  <div className="table-cell">
+                  <div className="table-cell" data-label="Auto Send">
                     <label className="toggle-switch">
                       <input
                         type="checkbox"
@@ -304,7 +323,7 @@ export default function Console() {
                     </label>
                   </div>
 
-                  <div className="table-cell">{renderCell(displayRow,'status')}</div>
+                  <div className="table-cell" data-label="Status">{renderCell(displayRow,'status')}</div>
 
                   <div className="table-cell action-cell">
                     <button
@@ -322,20 +341,20 @@ export default function Console() {
             {/* Render the new row form if active */}
             {newRow && (
               <div className="table-row">
-                <div className="table-cell">
+                <div className="table-cell" data-label="Phone">
                   <input type="tel" name="phone" value={newRow.phone} onChange={handleNewRowChange} placeholder="+15551234567" />
                 </div>
-                <div className="table-cell">
+                <div className="table-cell" data-label="Name">
                   <input type="text" name="name" value={newRow.name} onChange={handleNewRowChange} placeholder="Name" />
                 </div>
-                <div className="table-cell">N/A</div>
-                <div className="table-cell">
+                <div className="table-cell" data-label="Last Date Sent">N/A</div>
+                <div className="table-cell" data-label="Auto Send">
                   <label className="toggle-switch">
                     <input type="checkbox" name="auto_send" checked={newRow.auto_send} onChange={handleNewRowChange} />
                     <span className="toggle-slider"></span>
                   </label>
                 </div>
-                <div className="table-cell">
+                <div className="table-cell" data-label="Status">
                   <select name="status" value={newRow.status} onChange={handleNewRowChange}>
                     {statusOptions.map(o => <option key={o}>{o}</option>)}
                   </select>

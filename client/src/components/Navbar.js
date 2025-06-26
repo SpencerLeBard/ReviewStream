@@ -26,36 +26,43 @@ export default function Navbar() {
     navigate('/');
   };
 
+  const closeMenu = () => setOpen(false);
+
+  const handleLogoutClick = () => {
+    handleLogout();
+    closeMenu();
+  };
+
   return (
     <nav className="nav-container">
-      <Link to="/" className="logo-link">
+      <Link to="/" className="logo-link" onClick={closeMenu}>
         ReviewStream
       </Link>
       <button className="menu-button" onClick={() => setOpen(!open)}>
         {open ? '✕' : '☰'}
       </button>
-      <div className="left-nav-links">
+      <div className={`nav-links ${open ? 'open' : ''}`}>
         <div className="main-nav-links-container">
-          <NavLink to="/" end className="nav-item">Home</NavLink>
-          <NavLink to="/reviews" className="nav-item">Reviews</NavLink>
-          <NavLink to="/about" className="nav-item">About</NavLink>
+          <NavLink to="/" end className="nav-item" onClick={closeMenu}>Home</NavLink>
+          <NavLink to="/reviews" className="nav-item" onClick={closeMenu}>Reviews</NavLink>
+          <NavLink to="/about" className="nav-item" onClick={closeMenu}>About</NavLink>
           {user && (
             <React.Fragment>
-              <NavLink to="/dashboard" className="nav-item">Dashboard</NavLink>
-              <NavLink to="/console" className="nav-item">Console</NavLink>
-              <NavLink to="/settings" className="nav-item">Settings</NavLink>
+              <NavLink to="/dashboard" className="nav-item" onClick={closeMenu}>Dashboard</NavLink>
+              <NavLink to="/console" className="nav-item" onClick={closeMenu}>Console</NavLink>
+              <NavLink to="/settings" className="nav-item" onClick={closeMenu}>Settings</NavLink>
             </React.Fragment>
           )}
         </div>
-      </div>
-      <div className="right-nav-links">
-        {user ? (
-          <button className="login-button login-button-as-button" onClick={handleLogout}>
-            Logout
-          </button>
-        ) : (
-          <Link to="/login" className="login-button">Login</Link>
-        )}
+        <div className="right-nav-links">
+          {user ? (
+            <button className="login-button login-button-as-button" onClick={handleLogoutClick}>
+              Logout
+            </button>
+          ) : (
+            <Link to="/login" className="login-button" onClick={closeMenu}>Login</Link>
+          )}
+        </div>
       </div>
     </nav>
   );
