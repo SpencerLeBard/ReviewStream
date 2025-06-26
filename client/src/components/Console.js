@@ -38,7 +38,6 @@ export default function Console() {
   useEffect(() => {
     if (!session) return;
     (async () => {
-      const { data } = await supabase.from('contacts').select('*').order('created_at');
       const r = await fetch('/api/secure/contacts', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
