@@ -7,7 +7,7 @@ const Home = () => {
     <div className="home-container">
       <header className="hero">
         <div className="hero-content">
-          <h1 className="heading">Welcome to ReviewStream</h1>
+          <h1 className="heading">Welcome to Review Streams</h1>
           <p className="subheading">
             The simplest way to collect customer reviews via text message and showcase them on your website.
           </p>
@@ -46,7 +46,7 @@ const Home = () => {
           <div className="step-card">
             <div className="step-number">1</div>
             <h3 className="step-title">Sign Up</h3>
-            <p className="step-description">Create your ReviewStream account in minutes.</p>
+            <p className="step-description">Create your Review Streams account in minutes.</p>
           </div>
           <div className="step-card">
             <div className="step-number">2</div>
@@ -64,7 +64,7 @@ const Home = () => {
       <section className="testimonials-section">
         <h2 className="section-heading">Loved by businesses worldwide</h2>
         <div className="testimonial-card">
-          <p className="testimonial-text">"ReviewStream has transformed how we collect customer feedback. Our response rates have tripled!"</p>
+          <p className="testimonial-text">"Review Streams has transformed how we collect customer feedback. Our response rates have tripled!"</p>
           <p className="testimonial-author">- Karl, Owner of a local pump supply company</p>
         </div>
         <div className="testimonial-card">
@@ -75,12 +75,12 @@ const Home = () => {
 
       <section className="cta-section">
         <h2 className="cta-heading">Ready to boost your online reputation?</h2>
-        <p className="cta-subheading">Join ReviewStream today and start collecting authentic customer reviews.</p>
+        <p className="cta-subheading">Join Review Streams today and start collecting authentic customer reviews.</p>
         <Link className="cta-button" to="/reviews">Sign Up Now</Link>
       </section>
 
       <footer className="footer">
-        <p>&copy; 2024 ReviewStream. All rights reserved.</p>
+        <p>&copy; 2024 Review Streams. All rights reserved.</p>
       </footer>
     </div>
   );

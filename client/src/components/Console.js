@@ -376,7 +376,7 @@ export default function Console() {
       </section>
 
       <footer className="footer">
-        <p>&copy; 2024 ReviewStream. All rights reserved.</p>
+        <p>&copy; 2024 Review Streams. All rights reserved.</p>
       </footer>
     </div>
   );

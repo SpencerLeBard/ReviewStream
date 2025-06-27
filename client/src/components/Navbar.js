@@ -36,7 +36,7 @@ export default function Navbar() {
   return (
     <nav className="nav-container">
       <Link to="/" className="logo-link" onClick={closeMenu}>
-        ReviewStream
+        Review Streams
       </Link>
       <button className="menu-button" onClick={() => setOpen(!open)}>
         {open ? '✕' : '☰'}

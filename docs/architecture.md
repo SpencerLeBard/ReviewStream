@@ -1,6 +1,6 @@
-# ReviewStream: System Architecture
+# Review Streams: System Architecture
 
-*A comprehensive overview of the ReviewStream application, its components, data flows, and deployment strategy.*
+*A comprehensive overview of the Review Streams application, its components, data flows, and deployment strategy.*
 
 ---
 
@@ -27,7 +27,7 @@
 graph TD
     User("Business Owner")
 
-    subgraph "ReviewStream Application"
+    subgraph "Review Streams Application"
         Frontend["React SPA<br/>(Client)"]
         Backend_API["Node.js/Express API<br/>(Server)"]
     end

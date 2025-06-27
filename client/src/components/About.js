@@ -6,7 +6,7 @@ const About = () => {
     <div className="home-container">
       <header className="hero">
         <div className="hero-content">
-          <h1 className="heading">About ReviewStream</h1>
+          <h1 className="heading">About Review Streams</h1>
           <p className="subheading">
             We're simplifying how businesses gather and display customer feedback.
           </p>
@@ -17,7 +17,7 @@ const About = () => {
         <div className="about-card">
           <h2 className="section-heading">Our Mission</h2>
           <p>
-            At ReviewStream, we're transforming how businesses collect and showcase customer reviews. We believe that the 
+            At Review Streams, we're transforming how businesses collect and showcase customer reviews. We believe that the 
             feedback process should be simple and accessible for everyone, which is why we've created a text message-based 
             system that makes it easy for customers to share their experiences.
           </p>
@@ -39,7 +39,7 @@ const About = () => {
       <section className="team-section">
         <h2 className="section-heading">Our Team</h2>
         <p className="team-intro">
-          ReviewStream was founded by 2 friends who saw the need for a more streamlined approach 
+          Review Streams was founded by 2 friends who saw the need for a more streamlined approach 
           to customer reviews.  Just text back!
         </p>
         
@@ -59,7 +59,7 @@ const About = () => {
       </section>
       
       <footer className="footer">
-        <p>&copy; 2024 ReviewStream. All rights reserved.</p>
+        <p>&copy; 2024 Review Streams. All rights reserved.</p>
       </footer>
     </div>
   );
