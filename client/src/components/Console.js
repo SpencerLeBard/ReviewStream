@@ -191,7 +191,10 @@ export default function Console() {
     try {
       const res = await fetch(`/api/companies/${company.id}/send-review`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
         body: JSON.stringify({ customerPhone: phone })
       });
 
@@ -207,7 +210,7 @@ export default function Console() {
       console.error('Error sending SMS or updating contact:', error);
       showToast(`Error: ${error.message}`, 'error');
     }
-  }, [company, patch, showToast]);
+  }, [company, patch, showToast, session]);
 
   // --- RENDER LOGIC ---
 
@@ -219,9 +222,6 @@ export default function Console() {
    * @returns {JSX.Element} The rendered table cell.
    */
   const renderCell = (row, field, type='text') => {
-    // Lock the first row from being edited
-    if (row.locked) return <div className="editable-cell disabled-cell">{row[field]}</div>;
-
     // If the cell is in edit mode, render an input or select dropdown
     if (editing.id === row.id && editing.field === field) {
       if (field === 'status') {
@@ -301,13 +301,10 @@ export default function Console() {
           <div className="table-body">
             {/* Render existing contact rows */}
             {rows.map((row, index) => {
-              const isFirstRow = index === 0;
-              const displayRow = { ...row, locked: isFirstRow };
-
               return (
                 <div key={row.id} className="table-row">
-                  <div className="table-cell" data-label="Phone">{renderCell(displayRow,'phone')}</div>
-                  <div className="table-cell" data-label="Name">{renderCell(displayRow,'name')}</div>
+                  <div className="table-cell" data-label="Phone">{renderCell(row,'phone')}</div>
+                  <div className="table-cell" data-label="Name">{renderCell(row,'name')}</div>
                   <div className="table-cell" data-label="Last Date Sent">{formatDate(row.last_date_sent)}</div>
 
                   <div className="table-cell" data-label="Auto Send">
@@ -315,14 +312,13 @@ export default function Console() {
                       <input
                         type="checkbox"
                         checked={row.auto_send}
-                        disabled={isFirstRow}
-                        onChange={() => !isFirstRow && patch(row.id,{auto_send:!row.auto_send})}
+                        onChange={() => patch(row.id,{auto_send:!row.auto_send})}
                       />
                       <span className="toggle-slider"></span>
                     </label>
                   </div>
 
-                  <div className="table-cell" data-label="Status">{renderCell(displayRow,'status')}</div>
+                  <div className="table-cell" data-label="Status">{renderCell(row,'status')}</div>
 
                   <div className="table-cell action-cell">
                     <button
@@ -330,9 +326,7 @@ export default function Console() {
                       disabled={loadingCompany}
                       onClick={() => sendSms(row.id, row.phone)}
                     >{row.status === 'New Number' ? 'Send' : 'Resend'}</button>
-                    {!isFirstRow && (
-                      <button className="delete-button" onClick={() => delRow(row.id)}>✕</button>
-                    )}
+                    <button className="delete-button" onClick={() => delRow(row.id)}>✕</button>
                   </div>
                 </div>
               );

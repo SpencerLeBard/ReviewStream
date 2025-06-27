@@ -34,11 +34,15 @@ export default function Login() {
             Access your dashboard and manage your reviews.
           </p>
           <div className="about-card" style={{ maxWidth: '400px', margin: '2rem auto', background: 'rgba(255,255,255,0.95)' }}>
-            <Auth
+            {/* 
+              TODO: Re-enable logins tomorrow.
+              To re-enable, uncomment the <Auth> component.
+            */}
+            {/* <Auth
               supabaseClient={supabase}
               appearance={{}}
               providers={[]}
-            />
+            /> */}
           </div>
         </div>
       </header>

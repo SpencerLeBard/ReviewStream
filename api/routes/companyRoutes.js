@@ -14,6 +14,42 @@ const twilioClient = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
+// Middleware to check user ownership of a company
+const authenticateAndCheckCompany = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authentication required: No Bearer token provided.' });
+  }
+  const token = authHeader.split(' ')[1];
+  const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+  if (userError || !user) {
+    logger.warn('Invalid or expired token presented.', { error: userError });
+    return res.status(401).json({ error: 'Invalid or expired token.' });
+  }
+
+  const companyId = req.params.id;
+  if (!companyId) {
+      return res.status(400).json({ error: 'Company ID is required in the URL parameter.' });
+  }
+
+  const { data: company, error: companyError } = await supabase
+    .from('companies')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('id', companyId)
+    .single();
+
+  if (companyError || !company) {
+    logger.warn('Forbidden access attempt', { userId: user.id, companyId });
+    return res.status(403).json({ error: 'Forbidden. You do not have access to this company.' });
+  }
+
+  req.user = user;
+  req.company = company;
+  next();
+};
+
 // GET all companies
 router.get('/', async (req, res) => {
   try {
@@ -75,7 +111,7 @@ router.get('/:id/reviews', async (req, res) => {
 });
 
 // POST send review request
-router.post('/:id/send-review', async (req, res) => {
+router.post('/:id/send-review', authenticateAndCheckCompany, async (req, res) => {
   try {
     const { customerPhone } = req.body;
     const companyId = req.params.id;

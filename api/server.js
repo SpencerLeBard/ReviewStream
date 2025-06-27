@@ -48,6 +48,27 @@ const apiLimiter = rateLimit({
 // Apply the rate limiting middleware to API calls only
 app.use('/api', apiLimiter);
 
+// Middleware to validate Twilio's request signature
+const validateTwilioRequest = (req, res, next) => {
+  const twilioSignature = req.headers['x-twilio-signature'];
+  const fullUrl = new URL(req.originalUrl, process.env.API_BASE_URL).href;
+  const params = req.body;
+
+  const requestIsValid = twilio.validateRequest(
+    process.env.TWILIO_AUTH_TOKEN,
+    twilioSignature,
+    fullUrl,
+    params
+  );
+
+  if (requestIsValid) {
+    next();
+  } else {
+    logger.warn('Invalid Twilio signature received.', { url: fullUrl, ip: req.ip });
+    return res.status(403).type('text/plain').send('Forbidden: Invalid Twilio signature');
+  }
+};
+
 const reviewRoutes = require('./routes/reviewRoutes');
 app.use('/api/reviews', reviewRoutes);
 
@@ -61,7 +82,7 @@ const contactsRoutes = require('./routes/contactsRoutes');
 app.use('/api/secure/contacts', contactsRoutes);
 
 /* ──────────────────────────── INBOUND SMS WEBHOOK ──────────────────────────── */
-app.post('/api/text-webhook', async (req, res) => {
+app.post('/api/text-webhook', validateTwilioRequest, async (req, res) => {
   const { From, Body = '', SmsSid } = req.body || {};
   logger.info('Received Twilio text webhook', {
     from: From,
@@ -144,7 +165,7 @@ app.post('/api/log-auth', (req, res) => {
   res.sendStatus(204);
 });
 
-app.post('/api/twilio-status-webhook', (req, res) => {
+app.post('/api/twilio-status-webhook', validateTwilioRequest, (req, res) => {
   const { MessageSid, MessageStatus } = req.body;
 
   const logDetails = {

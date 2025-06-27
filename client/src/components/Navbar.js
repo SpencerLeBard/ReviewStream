@@ -60,7 +60,7 @@ export default function Navbar() {
               Logout
             </button>
           ) : (
-            null
+            <Link to="/login" className="login-button" onClick={closeMenu}>Login</Link>
           )}
         </div>
       </div>

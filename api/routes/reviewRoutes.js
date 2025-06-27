@@ -62,30 +62,6 @@ router.get('/company/:companyId', async (req, res) => {
   }
 });
 
-// POST new review (this would be called when receiving a text)
-router.post('/', async (req, res) => {
-  try {
-    const { customerName, phoneNumber, rating, reviewText } = req.body;
-    
-    // Insert new review into Supabase
-    const { data, error } = await supabase
-      .from('reviews')
-      .insert([{ 
-        phone_from: phoneNumber,
-        body: reviewText,
-        rating: rating
-      }])
-      .select();
-    
-    if (error) throw error;
-    
-    res.status(201).json(data[0]);
-  } catch (error) {
-    logger.error('Error creating review:', { error: error.message, body: req.body });
-    res.status(400).json({ message: error.message });
-  }
-});
-
 // GET review by ID
 router.get('/:id', async (req, res) => {
   try {
