@@ -1,4 +1,4 @@
-import { Auth } from '@supabase/auth-ui-react';
+// import { Auth } from '@supabase/auth-ui-react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
@@ -36,7 +36,8 @@ export default function Login() {
           <div className="about-card" style={{ maxWidth: '400px', margin: '2rem auto', background: 'rgba(255,255,255,0.95)' }}>
             {/* 
               TODO: Re-enable logins tomorrow.
-              To re-enable, uncomment the <Auth> component.
+              To re-enable, uncomment the import statement for Auth above
+              and the <Auth> component below.
             */}
             {/* <Auth
               supabaseClient={supabase}
