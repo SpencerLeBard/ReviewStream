@@ -1,14 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { useUser } from '@supabase/auth-helpers-react';
+import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import './Navbar.css';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const user = useUser();
+  const supabaseClient = useSupabaseClient();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkApprovalStatus = async () => {
+      if (!user) {
+        setIsApproved(false);
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const response = await fetch('/api/secure/users/company', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (response.ok) {
+          const companyData = await response.json();
+          setIsApproved(companyData.is_approved);
+        } else {
+          setIsApproved(false);
+        }
+      } catch (error) {
+        setIsApproved(false);
+        console.error('Error checking approval status:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkApprovalStatus();
+  }, [user, supabaseClient]);
 
   const logAuthEvent = (event, user, error = null) => {
     fetch('/api/log-auth', {
@@ -46,7 +78,7 @@ export default function Navbar() {
           <NavLink to="/" end className="nav-item" onClick={closeMenu}>Home</NavLink>
           <NavLink to="/reviews" className="nav-item" onClick={closeMenu}>Reviews</NavLink>
           <NavLink to="/about" className="nav-item" onClick={closeMenu}>About</NavLink>
-          {user && (
+          {user && isApproved && !isLoading && (
             <React.Fragment>
               <NavLink to="/dashboard" className="nav-item" onClick={closeMenu}>Dashboard</NavLink>
               <NavLink to="/console" className="nav-item" onClick={closeMenu}>Console</NavLink>

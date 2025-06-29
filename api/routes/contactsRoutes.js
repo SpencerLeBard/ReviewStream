@@ -22,12 +22,17 @@ const authenticate = async (req, res, next) => {
 
   const { data: company, error: companyError } = await supabase
     .from('companies')
-    .select('id')
+    .select('id, is_approved')
     .eq('user_id', user.id)
     .single();
 
   if (companyError || !company) {
     return res.status(404).json({ error: 'Company not found for user' });
+  }
+
+  if (!company.is_approved) {
+    logger.warn('Unauthorized attempt from a non-approved company.', { userId: user.id, companyId: company.id });
+    return res.status(403).json({ error: 'This account is not approved for access.' });
   }
 
   req.user = user;

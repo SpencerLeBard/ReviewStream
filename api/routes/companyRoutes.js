@@ -35,7 +35,7 @@ const authenticateAndCheckCompany = async (req, res, next) => {
 
   const { data: company, error: companyError } = await supabase
     .from('companies')
-    .select('id')
+    .select('id, is_approved')
     .eq('user_id', user.id)
     .eq('id', companyId)
     .single();
@@ -43,6 +43,11 @@ const authenticateAndCheckCompany = async (req, res, next) => {
   if (companyError || !company) {
     logger.warn('Forbidden access attempt', { userId: user.id, companyId });
     return res.status(403).json({ error: 'Forbidden. You do not have access to this company.' });
+  }
+
+  if (!company.is_approved) {
+    logger.warn('Unauthorized attempt from a non-approved company.', { userId: user.id, companyId: company.id });
+    return res.status(403).json({ error: 'This account is not approved for access.' });
   }
 
   req.user = user;

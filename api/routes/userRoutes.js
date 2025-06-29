@@ -21,6 +21,20 @@ const authenticate = async (req, res, next) => {
     logger.warn('Invalid or expired token.', { error });
     return res.status(401).json({ error: 'Invalid or expired token.' });
   }
+
+  // Check if the user has an approved company associated with their account
+  const { data: company, error: companyError } = await supabase
+    .from('companies')
+    .select('is_approved')
+    .eq('user_id', user.id)
+    .single();
+
+  // To disable this check, you can comment out or remove this block.
+  if (companyError || !company || !company.is_approved) {
+    logger.warn('Unauthorized login attempt from user without an approved company.', { userId: user.id, email: user.email, companyError });
+    return res.status(403).json({ error: 'This account is not approved for access.' });
+  }
+
   req.user = user;
   next();
 };

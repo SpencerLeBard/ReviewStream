@@ -9,6 +9,7 @@ import Login    from './components/Login';
 import Dashboard from './components/Dashboard';
 import Console from './components/Console';
 import Settings from './components/Settings';
+import ProtectedRoute from './components/ProtectedRoute';
 import { Routes, Route } from 'react-router-dom';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Analytics } from '@vercel/analytics/react';
@@ -25,9 +26,9 @@ export default function App() {
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/about"   element={<About />} />
           <Route path="/login"   element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/console" element={<Console />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/console" element={<ProtectedRoute><Console /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         </Routes>
       </ToastProvider>
     </SessionContextProvider>

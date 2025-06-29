@@ -1,4 +1,4 @@
-// import { Auth } from '@supabase/auth-ui-react';
+import { Auth } from '@supabase/auth-ui-react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
@@ -16,10 +16,31 @@ export default function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, session) => {
       if (session?.user) {
         logAuthEvent('login', session.user.email);
-        navigate('/console', { replace: true });
+
+        // Check company approval status before redirecting
+        try {
+          const response = await fetch('/api/secure/users/company', {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+
+          if (response.ok) {
+            const companyData = await response.json();
+            if (companyData.is_approved) {
+              navigate('/console', { replace: true });
+            } else {
+              navigate('/reviews', { replace: true });
+            }
+          } else {
+            // If company not found or not approved, redirect to public page
+            navigate('/reviews', { replace: true });
+          }
+        } catch (error) {
+          console.error('Error checking approval status, redirecting to safety.', error);
+          navigate('/reviews', { replace: true });
+        }
       }
     });
     return () => sub.subscription.unsubscribe();
@@ -34,16 +55,11 @@ export default function Login() {
             Access your dashboard and manage your reviews.
           </p>
           <div className="about-card" style={{ maxWidth: '400px', margin: '2rem auto', background: 'rgba(255,255,255,0.95)' }}>
-            {/* 
-              TODO: Re-enable logins tomorrow.
-              To re-enable, uncomment the import statement for Auth above
-              and the <Auth> component below.
-            */}
-            {/* <Auth
+            <Auth
               supabaseClient={supabase}
               appearance={{}}
               providers={[]}
-            /> */}
+            />
           </div>
         </div>
       </header>
