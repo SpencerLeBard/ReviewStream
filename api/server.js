@@ -136,7 +136,6 @@ app.post('/api/text-webhook', validateTwilioRequest, async (req, res) => {
 
   if (reviewInsertError) {
     logger.error('Error inserting review', { error: reviewInsertError, from: From, smsSid: SmsSid });
-    // Decide if you want to stop execution here or just log the error
   }
 
   const { error: requestUpdateError } = await supabase

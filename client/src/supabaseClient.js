@@ -8,4 +8,5 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-console.log('supabase url', process.env.REACT_APP_SUPABASE_URL);
+//un comment this for debugging
+// console.log('supabase url', process.env.REACT_APP_SUPABASE_URL);
