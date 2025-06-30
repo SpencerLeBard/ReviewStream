@@ -65,7 +65,7 @@ const Home = () => {
         <h2 className="section-heading">Loved by businesses worldwide</h2>
         <div className="testimonial-card">
           <p className="testimonial-text">"Review Streams has transformed how we collect customer feedback. Our response rates have tripled!"</p>
-          <p className="testimonial-author">- Karl, Owner of a local pump supply company</p>
+          <p className="testimonial-author">- Karl, Owner of a Local Pump Supply Company</p>
         </div>
         <div className="testimonial-card">
           <p className="testimonial-text">"The easiest and most effective review tool we've ever used. Highly recommended."</p>

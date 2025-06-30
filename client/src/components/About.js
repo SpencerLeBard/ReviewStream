@@ -53,7 +53,7 @@ const About = () => {
           <div className="team-member-card">
             <div className="team-member-image">👨🏻‍💼</div>
             <h3 className="team-member-name">D</h3>
-            <p className="team-member-role">Chief Marketing Officer</p>
+            <p className="team-member-role">Chief Sales and Marketing Officer</p>
           </div>
         </div>
       </section>
